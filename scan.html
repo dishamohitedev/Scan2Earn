@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan2Earn | Scan QR Code</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --border-color: #e5e7eb;
+    }
+    html.dark {
+      --bg-primary: #0f0f12;
+      --bg-secondary: #1a1a1e;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --border-color: #2a2a30;
+    }
+    body { background-color: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; }
+  </style>
+</head>
+<body>
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b" style="border-color: var(--border-color);">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2"><i class="fas fa-qrcode text-2xl text-blue-600"></i><span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span></div>
+      <div class="flex items-center gap-4"><a href="customer.html" class="text-gray-600 hover:text-blue-600"><i class="fas fa-wallet"></i> My Wallet</a><button id="darkModeToggle" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><i id="darkModeIcon" class="fas fa-moon"></i></button></div>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-6 py-12 text-center">
+    <div class="mb-8"><div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-camera text-4xl text-blue-600"></i></div><h1 class="text-3xl font-bold">Scan Store QR Code</h1><p class="mt-2" style="color: var(--text-secondary);">Point your camera at any Scan2Earn store QR code</p></div>
+
+    <div class="rounded-2xl p-8 border-2 border-dashed mb-8" style="border-color: var(--border-color); background-color: var(--bg-secondary);">
+      <i class="fas fa-qrcode text-6xl mb-4 opacity-50"></i>
+      <p class="text-sm">QR Scanner Simulation</p>
+      <div class="mt-4 space-y-3">
+        <input type="text" id="qrInput" placeholder="Or paste QR code URL here" class="w-full px-4 py-3 rounded-xl border" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+        <button id="simulateScanBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"><i class="fas fa-check-circle mr-2"></i> Simulate Scan</button>
+      </div>
+    </div>
+
+    <div class="rounded-2xl p-6 border" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+      <h3 class="font-bold mb-2"><i class="fas fa-store text-green-600 mr-2"></i> Demo Store QR</h3>
+      <p class="text-sm mb-3" style="color: var(--text-secondary);">Click below to simulate scanning from Green Bean Coffee</p>
+      <button id="demoScanBtn" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"><i class="fas fa-coffee"></i> Scan Demo Store</button>
+    </div>
+
+    <div id="scanResult" class="mt-8 p-4 rounded-xl hidden" style="background-color: var(--bg-secondary);"></div>
+  </div>
+
+  <script>
+    let currentCustomer = JSON.parse(localStorage.getItem('currentCustomer')) || { address: '0x742d...b0b2', totalPoints: 245, history: [] };
+    let storeData = JSON.parse(localStorage.getItem('storeData')) || { name: 'Green Bean Coffee', pointsPerPurchase: 10, rewards: [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }] };
+    
+    function saveCustomer() { localStorage.setItem('currentCustomer', JSON.stringify(currentCustomer)); }
+    
+    function processScan(storeName, points) {
+      currentCustomer.totalPoints += points;
+      currentCustomer.history.unshift({ action: `Earned ${points} points from ${storeName}`, date: new Date().toLocaleString(), points: points });
+      saveCustomer();
+      const resultDiv = document.getElementById('scanResult');
+      resultDiv.className = 'mt-8 p-4 rounded-xl bg-green-100 dark:bg-green-900/30';
+      resultDiv.innerHTML = `<i class="fas fa-check-circle text-green-600 text-2xl mb-2 block"></i><h3 class="font-bold text-lg">✅ Success!</h3><p>You earned ${points} points from ${storeName}!</p><p class="text-sm mt-2">Total points: ${currentCustomer.totalPoints}</p><a href="customer.html" class="inline-block mt-3 text-blue-600 underline">Go to Wallet →</a>`;
+      resultDiv.classList.remove('hidden');
+      setTimeout(() => { resultDiv.classList.add('hidden'); }, 5000);
+    }
+    
+    document.getElementById('simulateScanBtn')?.addEventListener('click', () => {
+      const input = document.getElementById('qrInput').value;
+      if (input.includes('coffee_001') || input.includes('Green Bean')) processScan('Green Bean Coffee', 10);
+      else if (input) alert('Invalid store QR code. Try the demo button below.');
+      else alert('Please enter or simulate a QR code');
+    });
+    
+    document.getElementById('demoScanBtn')?.addEventListener('click', () => processScan('Green Bean Coffee', 10));
+    
+    const toggleBtn = document.getElementById('darkModeToggle'), icon = document.getElementById('darkModeIcon');
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) { document.documentElement.classList.add('dark'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+    toggleBtn?.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.setItem('darkMode', 'false'); icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+      else { document.documentElement.classList.add('dark'); localStorage.setItem('darkMode', 'true'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+    });
+  </script>
+</body>
+</html>

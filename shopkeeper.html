@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan2Earn | Shopkeeper Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --border-color: #e5e7eb;
+      --card-bg: #ffffff;
+    }
+    html.dark {
+      --bg-primary: #0f0f12;
+      --bg-secondary: #1a1a1e;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --border-color: #2a2a30;
+      --card-bg: #1f1f24;
+    }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--bg-primary);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border-color);
+    }
+    html.dark .bg-white { background-color: var(--card-bg) !important; }
+    html.dark .bg-gray-50 { background-color: var(--bg-secondary) !important; }
+    html.dark .text-gray-900 { color: var(--text-primary) !important; }
+    html.dark .text-gray-600 { color: var(--text-secondary) !important; }
+  </style>
+</head>
+<body>
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b" style="background-color: var(--nav-bg, rgba(255,255,255,0.8)); border-color: var(--border-color);">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-qrcode text-2xl text-blue-600"></i>
+        <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-gray-600 hover:text-blue-600 transition"><i class="fas fa-home"></i> Home</a>
+        <button id="darkModeToggle" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+          <i id="darkModeIcon" class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold" style="color: var(--text-primary);">Shopkeeper Dashboard</h1>
+        <p style="color: var(--text-secondary);">Manage your store and customer loyalty program</p>
+      </div>
+      <div class="flex gap-3">
+        <button id="saveStoreBtn" class="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition"><i class="fas fa-save"></i> Save Changes</button>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-store text-blue-600 mr-2"></i> Store Information</h2>
+          <div class="space-y-4">
+            <div><label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Store Name</label><input type="text" id="storeName" value="Green Bean Coffee" class="w-full px-4 py-2 rounded-xl border" style="background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary);"></div>
+            <div><label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Description</label><textarea id="storeDesc" rows="2" class="w-full px-4 py-2 rounded-xl border" style="background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary);">Premium coffee shop. Earn points with every purchase!</textarea></div>
+            <div><label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Wallet Address</label><div class="flex gap-2"><code class="flex-1 px-4 py-2 rounded-xl text-sm bg-gray-100" style="background-color: var(--bg-secondary);">0x742d35Cc6634C0532925a3b844Bc9e7595f0b0b2</code><button onclick="navigator.clipboard.writeText('0x742d35Cc6634C0532925a3b844Bc9e7595f0b0b2')" class="px-3 rounded-xl bg-gray-100"><i class="fas fa-copy"></i></button></div></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-tag text-purple-600 mr-2"></i> Reward Rules</h2>
+          <div class="space-y-4">
+            <div><label class="block text-sm font-medium mb-2">Points per Purchase</label><input type="number" id="pointsPerPurchase" value="10" class="w-32 px-4 py-2 rounded-xl border" style="background-color: var(--bg-secondary); border-color: var(--border-color);"></div>
+            <div class="border-t pt-4"><label class="block text-sm font-medium mb-2">Reward 1</label><div class="grid grid-cols-2 gap-3"><input type="text" id="reward1Name" value="Free Coffee" placeholder="Reward name" class="px-3 py-2 rounded-xl border"><input type="number" id="reward1Points" value="100" placeholder="Points" class="px-3 py-2 rounded-xl border" style="background-color: var(--bg-secondary); border-color: var(--border-color);"></div></div>
+            <div><label class="block text-sm font-medium mb-2">Reward 2</label><div class="grid grid-cols-2 gap-3"><input type="text" id="reward2Name" value="Free Dessert" placeholder="Reward name" class="px-3 py-2 rounded-xl border"><input type="number" id="reward2Points" value="250" placeholder="Points" class="px-3 py-2 rounded-xl border" style="background-color: var(--bg-secondary); border-color: var(--border-color);"></div></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-users text-blue-600 mr-2"></i> Recent Customers</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="border-b" style="border-color: var(--border-color);"><th class="text-left py-3">Wallet</th><th class="text-left py-3">Points</th><th class="text-left py-3">Visits</th><th class="text-left py-3">Action</th></tr></thead>
+              <tbody id="customersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="rounded-2xl p-6 border text-center" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-qrcode text-green-600 mr-2"></i> Store QR Code</h2>
+          <div id="qrcode" class="flex justify-center mb-4"></div>
+          <button id="downloadQR" class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition"><i class="fas fa-download mr-2"></i> Download QR</button>
+        </div>
+
+        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-xl font-bold mb-4"><i class="fas fa-bolt text-yellow-600 mr-2"></i> Quick Actions</h2>
+          <div class="space-y-3">
+            <button id="awardPointsBtn" class="w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition"><i class="fas fa-plus-circle"></i> Award Points</button>
+            <button class="w-full border py-3 rounded-xl transition" style="border-color: var(--border-color);" onclick="location.href='scan.html'"><i class="fas fa-qrcode"></i> Test Scan QR</button>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
+          <h2 class="text-sm font-semibold uppercase tracking-wide mb-3" style="color: var(--text-secondary);">Blockchain Status</h2>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span>Network:</span><span class="text-green-600">Base Sepolia ✓</span></div>
+            <div class="flex justify-between"><span>Gasless:</span><span class="text-green-600">UGF Active ✓</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pointsModal" class="modal">
+    <div class="modal-content"><h2 class="text-xl font-bold mb-4">Award Points</h2><input type="text" id="customerAddress" placeholder="Customer Wallet Address" class="w-full mb-3 px-4 py-2 rounded-xl border"><input type="number" id="pointsAmount" value="10" placeholder="Points" class="w-full mb-4 px-4 py-2 rounded-xl border"><div class="flex gap-3"><button id="submitPoints" class="flex-1 bg-blue-600 text-white py-2 rounded-xl">Award</button><button id="closeModal" class="flex-1 border py-2 rounded-xl">Cancel</button></div></div>
+  </div>
+
+  <script>
+    let customers = JSON.parse(localStorage.getItem('customers')) || [
+      { address: '0x742d...b0b2', points: 245, visits: 12 },
+      { address: '0x8ba1...f3e9', points: 189, visits: 8 },
+      { address: '0xc3d7...a2b4', points: 567, visits: 24 }
+    ];
+    
+    function saveCustomers() { localStorage.setItem('customers', JSON.stringify(customers)); }
+    
+    function renderCustomers() {
+      const tbody = document.getElementById('customersTableBody');
+      if (tbody) tbody.innerHTML = customers.map(c => `<tr class="border-b" style="border-color: var(--border-color);"><td class="py-3 font-mono text-xs">${c.address}</td><td class="py-3">${c.points}</td><td class="py-3">${c.visits}</td><td class="py-3"><button onclick="awardToCustomer('${c.address}')" class="text-blue-600 text-xs">+ Award</button></td></tr>`).join('');
+    }
+    
+    window.awardToCustomer = (address) => {
+      const points = prompt('Enter points to award:', '10');
+      if (points) {
+        const customer = customers.find(c => c.address === address);
+        if (customer) { customer.points += parseInt(points); customer.visits++; saveCustomers(); renderCustomers(); alert(`✅ ${points} points awarded!`); }
+      }
+    };
+    
+    const qrData = JSON.stringify({ storeId: "coffee_001", storeName: "Green Bean Coffee", action: "earn_points" });
+    new QRCode(document.getElementById("qrcode"), { text: `https://scan2earn.app/scan?data=${encodeURIComponent(qrData)}`, width: 200, height: 200 });
+    
+    document.getElementById("downloadQR")?.addEventListener("click", () => {
+      const canvas = document.querySelector("#qrcode canvas");
+      if (canvas) { const link = document.createElement("a"); link.download = "qrcode.png"; link.href = canvas.toDataURL(); link.click(); }
+    });
+    
+    const modal = document.getElementById("pointsModal");
+    document.getElementById("awardPointsBtn")?.addEventListener("click", () => modal.classList.add("active"));
+    document.getElementById("closeModal")?.addEventListener("click", () => modal.classList.remove("active"));
+    document.getElementById("submitPoints")?.addEventListener("click", () => {
+      const address = document.getElementById("customerAddress").value;
+      const points = parseInt(document.getElementById("pointsAmount").value);
+      if (address && points) {
+        let customer = customers.find(c => c.address === address);
+        if (!customer) { customer = { address, points: 0, visits: 0 }; customers.push(customer); }
+        customer.points += points; customer.visits++;
+        saveCustomers(); renderCustomers();
+        alert(`✅ ${points} points awarded to ${address.substring(0, 10)}...\n\nGasless transaction via UGF!`);
+        modal.classList.remove("active");
+        document.getElementById("customerAddress").value = "";
+      } else alert("Please fill all fields");
+    });
+    
+    document.getElementById("saveStoreBtn")?.addEventListener("click", () => {
+      const storeData = { name: document.getElementById("storeName").value, desc: document.getElementById("storeDesc").value, pointsPerPurchase: document.getElementById("pointsPerPurchase").value, rewards: [{ name: document.getElementById("reward1Name").value, points: document.getElementById("reward1Points").value }, { name: document.getElementById("reward2Name").value, points: document.getElementById("reward2Points").value }] };
+      localStorage.setItem('storeData', JSON.stringify(storeData));
+      alert("✅ Store settings saved!");
+    });
+    
+    const savedStore = localStorage.getItem('storeData');
+    if (savedStore) { const data = JSON.parse(savedStore); if(document.getElementById("storeName")) document.getElementById("storeName").value = data.name; if(document.getElementById("storeDesc")) document.getElementById("storeDesc").value = data.desc; if(document.getElementById("pointsPerPurchase")) document.getElementById("pointsPerPurchase").value = data.pointsPerPurchase; if(data.rewards && data.rewards[0]) { if(document.getElementById("reward1Name")) document.getElementById("reward1Name").value = data.rewards[0].name; if(document.getElementById("reward1Points")) document.getElementById("reward1Points").value = data.rewards[0].points; } if(data.rewards && data.rewards[1]) { if(document.getElementById("reward2Name")) document.getElementById("reward2Name").value = data.rewards[1].name; if(document.getElementById("reward2Points")) document.getElementById("reward2Points").value = data.rewards[1].points; } }
+    
+    renderCustomers();
+    
+    const toggleBtn = document.getElementById('darkModeToggle'), icon = document.getElementById('darkModeIcon');
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) { document.documentElement.classList.add('dark'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+    toggleBtn?.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.setItem('darkMode', 'false'); icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+      else { document.documentElement.classList.add('dark'); localStorage.setItem('darkMode', 'true'); icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+    });
+  </script>
+</body>
+</html>
