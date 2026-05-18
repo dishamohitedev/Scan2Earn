@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
   <style>
     * { font-family: 'Inter', sans-serif; }
     
@@ -67,12 +68,107 @@
 </head>
 <body>
 
-  <script>
-    // Check if user is logged in
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.type !== 'customer') {
-      window.location.href = 'login.html';
+  <script type="module">
+    import { auth, db, doc, getDoc, updateDoc } from './firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    
+    let currentCustomerData = null;
+    let currentUid = null;
+    
+    // Check if user is logged in and is a customer
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists() || userDoc.data().type !== 'customer') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentCustomerData = userDoc.data();
+      currentUid = user.uid;
+      initializeWallet(currentCustomerData);
+    });
+    
+    async function initializeWallet(customerData) {
+      document.getElementById('customerName').innerText = customerData.name;
+      updateUI(customerData);
     }
+    
+    function updateUI(customerData) {
+      const totalPoints = customerData.totalPoints || 0;
+      document.getElementById('totalPoints').innerText = totalPoints;
+      
+      // Sample rewards (in real app, fetch from shops)
+      const rewards = [
+        { name: 'Free Coffee', points: 100, shopName: 'Any Store' },
+        { name: 'Free Dessert', points: 250, shopName: 'Any Store' }
+      ];
+      
+      const nextReward = rewards.find(r => r.points > totalPoints) || rewards[0];
+      const progress = nextReward ? Math.min(100, (totalPoints / nextReward.points) * 100) : 100;
+      document.getElementById('progressBar').style.width = `${progress}%`;
+      document.getElementById('nextRewardProgress').innerText = `${totalPoints}/${nextReward?.points || 100}`;
+      
+      const rewardsDiv = document.getElementById('rewardsList');
+      rewardsDiv.innerHTML = rewards.map(r => `
+        <div class="flex justify-between items-center p-3 rounded-xl border" style="border-color: var(--border-color);">
+          <div>
+            <span class="font-medium" style="color: var(--text-primary);">${r.name}</span>
+            <p class="text-xs" style="color: var(--text-secondary);">${r.shopName} • ${r.points} points required</p>
+          </div>
+          <button onclick="window.redeemReward('${r.name}', ${r.points}, '${r.shopName}')" 
+            class="px-4 py-2 rounded-lg ${totalPoints >= r.points ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}" 
+            ${totalPoints >= r.points ? '' : 'disabled'}>
+            Redeem
+          </button>
+        </div>
+      `).join('');
+      
+      const historyDiv = document.getElementById('historyList');
+      const history = customerData.history || [];
+      historyDiv.innerHTML = history.slice().reverse().slice(0, 10).map(h => `
+        <div class="flex justify-between items-center p-2 rounded-lg" style="background-color: var(--bg-secondary);">
+          <span style="color: var(--text-primary);">
+            <i class="fas ${h.action.includes('Earned') ? 'fa-plus-circle text-green-500' : 'fa-gift text-purple-500'} mr-2"></i>
+            ${h.action}
+          </span>
+          <span class="text-xs" style="color: var(--text-secondary);">${h.date}</span>
+        </div>
+      `).join('');
+    }
+    
+    window.redeemReward = async (name, points, shopName) => {
+      if ((currentCustomerData.totalPoints || 0) >= points) {
+        const confirmed = confirm(`Redeem ${name} from ${shopName} for ${points} points?`);
+        if (confirmed) {
+          currentCustomerData.totalPoints = (currentCustomerData.totalPoints || 0) - points;
+          currentCustomerData.history = currentCustomerData.history || [];
+          currentCustomerData.history.unshift({ 
+            action: `Redeemed ${name} from ${shopName}`, 
+            date: new Date().toLocaleString(), 
+            points: -points 
+          });
+          
+          await updateDoc(doc(db, 'users', currentUid), {
+            totalPoints: currentCustomerData.totalPoints,
+            history: currentCustomerData.history
+          });
+          
+          updateUI(currentCustomerData);
+          alert(`🎉 Reward redeemed! ${name} is yours. Show this to the shopkeeper.`);
+        }
+      }
+    };
+    
+    window.logout = async function() {
+      await auth.signOut();
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    };
   </script>
 
   <nav class="sticky top-0 z-50">
@@ -83,7 +179,7 @@
       </div>
       <div class="flex items-center gap-4">
         <span style="color: var(--text-secondary);"><i class="fas fa-user"></i> <span id="customerName"></span></span>
-        <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition">
+        <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
         <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
@@ -143,127 +239,7 @@
     </div>
   </div>
 
-  <div id="redeemModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">Redeem Reward</h2>
-      <p id="rewardToRedeem" class="mb-4" style="color: var(--text-secondary);"></p>
-      <div class="flex gap-3">
-        <button id="confirmRedeem" class="flex-1 bg-green-600 text-white py-2 rounded-xl hover:bg-green-700">Confirm</button>
-        <button id="closeRedeemModal" class="flex-1 border py-2 rounded-xl" style="border-color: var(--border-color); color: var(--text-primary);">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Get customer data
-    let allUsers = JSON.parse(localStorage.getItem('users'));
-    let currentCustomer = allUsers.customers.find(c => c.id === currentUser.id);
-    let storeData = JSON.parse(localStorage.getItem('storeData')) || { rewards: [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }] };
-    let pendingReward = null;
-    
-    document.getElementById('customerName').innerText = currentCustomer.name;
-    
-    function updateCustomerInStorage() {
-      allUsers = JSON.parse(localStorage.getItem('users'));
-      const index = allUsers.customers.findIndex(c => c.id === currentCustomer.id);
-      if (index !== -1) {
-        allUsers.customers[index] = currentCustomer;
-        localStorage.setItem('users', JSON.stringify(allUsers));
-        localStorage.setItem('currentUser', JSON.stringify({ ...currentCustomer, type: 'customer' }));
-      }
-    }
-    
-    function updateUI() {
-      document.getElementById('totalPoints').innerText = currentCustomer.totalPoints || 0;
-      
-      // Get rewards from all shops or default
-      const allShops = allUsers.shopkeepers;
-      let allRewards = [];
-      allShops.forEach(shop => {
-        if (shop.rewards) {
-          shop.rewards.forEach(reward => {
-            allRewards.push({ ...reward, shopName: shop.storeName || shop.name });
-          });
-        }
-      });
-      
-      if (allRewards.length === 0) {
-        allRewards = [
-          { name: 'Free Coffee', points: 100, shopName: 'Any Store' },
-          { name: 'Free Dessert', points: 250, shopName: 'Any Store' }
-        ];
-      }
-      
-      const nextReward = allRewards.find(r => r.points > (currentCustomer.totalPoints || 0)) || allRewards[0];
-      const progress = nextReward ? Math.min(100, ((currentCustomer.totalPoints || 0) / nextReward.points) * 100) : 100;
-      document.getElementById('progressBar').style.width = `${progress}%`;
-      document.getElementById('nextRewardProgress').innerText = `${currentCustomer.totalPoints || 0}/${nextReward?.points || 100}`;
-      
-      const rewardsDiv = document.getElementById('rewardsList');
-      rewardsDiv.innerHTML = allRewards.map(r => `
-        <div class="flex justify-between items-center p-3 rounded-xl border" style="border-color: var(--border-color);">
-          <div>
-            <span class="font-medium" style="color: var(--text-primary);">${r.name}</span>
-            <p class="text-xs" style="color: var(--text-secondary);">${r.shopName} • ${r.points} points required</p>
-          </div>
-          <button onclick="redeemReward('${r.name}', ${r.points}, '${r.shopName}')" 
-            class="px-4 py-2 rounded-lg ${(currentCustomer.totalPoints || 0) >= r.points ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}" 
-            ${(currentCustomer.totalPoints || 0) >= r.points ? '' : 'disabled'}>
-            Redeem
-          </button>
-        </div>
-      `).join('');
-      
-      const historyDiv = document.getElementById('historyList');
-      const history = currentCustomer.history || [];
-      historyDiv.innerHTML = history.slice().reverse().slice(0, 10).map(h => `
-        <div class="flex justify-between items-center p-2 rounded-lg" style="background-color: var(--bg-secondary);">
-          <span style="color: var(--text-primary);">
-            <i class="fas ${h.action.includes('Earned') ? 'fa-plus-circle text-green-500' : 'fa-gift text-purple-500'} mr-2"></i>
-            ${h.action}
-          </span>
-          <span class="text-xs" style="color: var(--text-secondary);">${h.date}</span>
-        </div>
-      `).join('');
-    }
-    
-    window.redeemReward = (name, points, shopName) => {
-      if ((currentCustomer.totalPoints || 0) >= points) {
-        pendingReward = { name, points, shopName };
-        document.getElementById('rewardToRedeem').innerText = `Redeem ${name} from ${shopName} for ${points} points?`;
-        document.getElementById('redeemModal').classList.add('active');
-      }
-    };
-    
-    document.getElementById('confirmRedeem')?.addEventListener('click', () => {
-      if (pendingReward) {
-        currentCustomer.totalPoints = (currentCustomer.totalPoints || 0) - pendingReward.points;
-        currentCustomer.history = currentCustomer.history || [];
-        currentCustomer.history.unshift({ 
-          action: `Redeemed ${pendingReward.name} from ${pendingReward.shopName}`, 
-          date: new Date().toLocaleString(), 
-          points: -pendingReward.points 
-        });
-        updateCustomerInStorage();
-        updateUI();
-        alert(`🎉 Reward redeemed! ${pendingReward.name} is yours. Show this to the shopkeeper.`);
-        document.getElementById('redeemModal').classList.remove('active');
-        pendingReward = null;
-      }
-    });
-    
-    document.getElementById('closeRedeemModal')?.addEventListener('click', () => {
-      document.getElementById('redeemModal').classList.remove('active');
-    });
-    
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'login.html';
-    });
-    
-    updateUI();
-    
+  <script type="module">
     // Dark mode toggle
     const toggleBtn = document.getElementById('darkModeToggle');
     const icon = document.getElementById('darkModeIcon');
