@@ -69,16 +69,6 @@
       border: 1px solid var(--border-color);
     }
     
-    /* Dark mode overrides */
-    html.dark .bg-white { background-color: var(--card-bg) !important; }
-    html.dark .bg-gray-50 { background-color: var(--bg-secondary) !important; }
-    html.dark .bg-gray-100 { background-color: #2a2a30 !important; }
-    html.dark .text-gray-900 { color: var(--text-primary) !important; }
-    html.dark .text-gray-600, 
-    html.dark .text-gray-500, 
-    html.dark .text-gray-700 { color: var(--text-secondary) !important; }
-    html.dark .border-gray-200 { border-color: var(--border-color) !important; }
-    
     input, textarea {
       background-color: var(--bg-secondary) !important;
       border-color: var(--border-color) !important;
@@ -92,6 +82,14 @@
 </head>
 <body>
 
+  <script>
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.type !== 'shopkeeper') {
+      window.location.href = 'login.html';
+    }
+  </script>
+
   <!-- Navigation -->
   <nav class="sticky top-0 z-50 border-b shadow-sm transition-all duration-300">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -100,7 +98,10 @@
         <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
       </div>
       <div class="flex items-center gap-4">
-        <a href="index.html" class="hover:text-blue-600 transition" style="color: var(--text-secondary);"><i class="fas fa-home"></i> Home</a>
+        <span style="color: var(--text-secondary);"><i class="fas fa-store"></i> <span id="shopNameDisplay"></span></span>
+        <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
         <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
           <i id="darkModeIcon" class="fas fa-moon" style="color: var(--text-primary);"></i>
         </button>
@@ -118,7 +119,6 @@
     </div>
 
     <div class="grid lg:grid-cols-3 gap-8">
-      <!-- Left Column -->
       <div class="lg:col-span-2 space-y-6">
         
         <!-- Store Information Card -->
@@ -129,17 +129,17 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium mb-2">Store Name</label>
-              <input type="text" id="storeName" value="Green Bean Coffee" class="w-full px-4 py-2 rounded-xl border">
+              <input type="text" id="storeName" class="w-full px-4 py-2 rounded-xl border">
             </div>
             <div>
               <label class="block text-sm font-medium mb-2">Description</label>
-              <textarea id="storeDesc" rows="2" class="w-full px-4 py-2 rounded-xl border">Premium coffee shop. Earn points with every purchase!</textarea>
+              <textarea id="storeDesc" rows="2" class="w-full px-4 py-2 rounded-xl border"></textarea>
             </div>
             <div>
               <label class="block text-sm font-medium mb-2">Wallet Address</label>
               <div class="flex gap-2">
-                <code class="flex-1 px-4 py-2 rounded-xl text-sm" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);">0x742d35Cc6634C0532925a3b844Bc9e7595f0b0b2</code>
-                <button onclick="navigator.clipboard.writeText('0x742d35Cc6634C0532925a3b844Bc9e7595f0b0b2')" class="px-3 rounded-xl" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-copy"></i></button>
+                <code id="walletAddress" class="flex-1 px-4 py-2 rounded-xl text-sm" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"></code>
+                <button onclick="copyWallet()" class="px-3 rounded-xl" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);"><i class="fas fa-copy"></i></button>
               </div>
             </div>
           </div>
@@ -153,49 +153,28 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium mb-2">Points per Purchase</label>
-              <input type="number" id="pointsPerPurchase" value="10" class="w-32 px-4 py-2 rounded-xl border">
+              <input type="number" id="pointsPerPurchase" class="w-32 px-4 py-2 rounded-xl border">
             </div>
             
             <div class="border-t pt-4" style="border-color: var(--border-color);">
               <label class="block text-sm font-medium mb-2">Reward #1</label>
               <div class="grid grid-cols-2 gap-3">
-                <input type="text" id="reward1Name" value="Free Coffee" placeholder="Reward name" class="px-3 py-2 rounded-xl border">
-                <input type="number" id="reward1Points" value="100" placeholder="Points" class="px-3 py-2 rounded-xl border">
+                <input type="text" id="reward1Name" placeholder="Reward name" class="px-3 py-2 rounded-xl border">
+                <input type="number" id="reward1Points" placeholder="Points" class="px-3 py-2 rounded-xl border">
               </div>
             </div>
             
             <div>
               <label class="block text-sm font-medium mb-2">Reward #2</label>
               <div class="grid grid-cols-2 gap-3">
-                <input type="text" id="reward2Name" value="Free Dessert" placeholder="Reward name" class="px-3 py-2 rounded-xl border">
-                <input type="number" id="reward2Points" value="250" placeholder="Points" class="px-3 py-2 rounded-xl border">
+                <input type="text" id="reward2Name" placeholder="Reward name" class="px-3 py-2 rounded-xl border">
+                <input type="number" id="reward2Points" placeholder="Points" class="px-3 py-2 rounded-xl border">
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Recent Customers Table -->
-        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
-          <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">
-            <i class="fas fa-users text-blue-600 mr-2"></i> Recent Customers
-          </h2>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b" style="border-color: var(--border-color);">
-                  <th class="text-left py-3" style="color: var(--text-secondary);">Wallet</th>
-                  <th class="text-left py-3" style="color: var(--text-secondary);">Points</th>
-                  <th class="text-left py-3" style="color: var(--text-secondary);">Visits</th>
-                  <th class="text-left py-3" style="color: var(--text-secondary);">Action</th>
-                </tr>
-              </thead>
-              <tbody id="customersTableBody"></tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
-      <!-- Right Column -->
       <div class="space-y-6">
         
         <!-- QR Code Card -->
@@ -223,25 +202,6 @@
             </button>
           </div>
         </div>
-
-        <!-- Blockchain Status Card -->
-        <div class="rounded-2xl p-6 border" style="background-color: var(--card-bg); border-color: var(--border-color);">
-          <h2 class="text-sm font-semibold uppercase tracking-wide mb-3" style="color: var(--text-secondary);">Blockchain Status</h2>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between">
-              <span style="color: var(--text-secondary);">Network:</span>
-              <span class="text-green-600">Base Sepolia ✓</span>
-            </div>
-            <div class="flex justify-between">
-              <span style="color: var(--text-secondary);">Gasless:</span>
-              <span class="text-green-600">UGF Active ✓</span>
-            </div>
-            <div class="flex justify-between">
-              <span style="color: var(--text-secondary);">Token:</span>
-              <span style="color: var(--text-primary);">S2E Points</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -260,57 +220,56 @@
   </div>
 
   <script>
-    let customers = JSON.parse(localStorage.getItem('customers')) || [
-      { address: '0x742d...b0b2', points: 245, visits: 12 },
-      { address: '0x8ba1...f3e9', points: 189, visits: 8 },
-      { address: '0xc3d7...a2b4', points: 567, visits: 24 }
-    ];
+    // Get current shopkeeper data
+    let currentShopkeeper = JSON.parse(localStorage.getItem('currentUser'));
+    let allUsers = JSON.parse(localStorage.getItem('users'));
     
-    function saveCustomers() { localStorage.setItem('customers', JSON.stringify(customers)); }
+    // Find the full shopkeeper data
+    let shopkeeperData = allUsers.shopkeepers.find(s => s.id === currentShopkeeper.id);
     
-    function renderCustomers() {
-      const tbody = document.getElementById('customersTableBody');
-      if (tbody) {
-        tbody.innerHTML = customers.map(c => `
-          <tr class="border-b" style="border-color: var(--border-color);">
-            <td class="py-3 font-mono text-xs" style="color: var(--text-primary);">${c.address}</td>
-            <td class="py-3" style="color: var(--text-primary);">${c.points}</td>
-            <td class="py-3" style="color: var(--text-primary);">${c.visits}</td>
-            <td class="py-3"><button onclick="awardToCustomer('${c.address}')" class="text-blue-600 text-xs hover:underline">+ Award</button></td>
-          </tr>
-        `).join('');
+    function updateShopkeeperInStorage() {
+      allUsers = JSON.parse(localStorage.getItem('users'));
+      const index = allUsers.shopkeepers.findIndex(s => s.id === shopkeeperData.id);
+      if (index !== -1) {
+        allUsers.shopkeepers[index] = shopkeeperData;
+        localStorage.setItem('users', JSON.stringify(allUsers));
+        localStorage.setItem('currentUser', JSON.stringify({ ...shopkeeperData, type: 'shopkeeper' }));
       }
     }
     
-    window.awardToCustomer = (address) => {
-      const points = prompt('Enter points to award:', '10');
-      if (points) {
-        const customer = customers.find(c => c.address === address);
-        if (customer) { 
-          customer.points += parseInt(points); 
-          customer.visits++; 
-          saveCustomers(); 
-          renderCustomers(); 
-          alert(`✅ ${points} points awarded to ${address}!`);
-          
-          // Also update current customer in localStorage
-          let currentCustomer = JSON.parse(localStorage.getItem('currentCustomer'));
-          if (currentCustomer && currentCustomer.address === address) {
-            currentCustomer.totalPoints = (currentCustomer.totalPoints || 0) + parseInt(points);
-            currentCustomer.history = currentCustomer.history || [];
-            currentCustomer.history.unshift({
-              action: `Earned ${points} points from store`,
-              date: new Date().toLocaleString(),
-              points: parseInt(points)
-            });
-            localStorage.setItem('currentCustomer', JSON.stringify(currentCustomer));
-          }
-        }
-      }
-    };
+    // Load shopkeeper data into form
+    document.getElementById('storeName').value = shopkeeperData.storeName || shopkeeperData.name;
+    document.getElementById('storeDesc').value = shopkeeperData.storeDesc || '';
+    document.getElementById('walletAddress').innerText = shopkeeperData.walletAddress;
+    document.getElementById('pointsPerPurchase').value = shopkeeperData.pointsPerPurchase || 10;
+    document.getElementById('reward1Name').value = shopkeeperData.rewards?.[0]?.name || 'Free Coffee';
+    document.getElementById('reward1Points').value = shopkeeperData.rewards?.[0]?.points || 100;
+    document.getElementById('reward2Name').value = shopkeeperData.rewards?.[1]?.name || 'Free Dessert';
+    document.getElementById('reward2Points').value = shopkeeperData.rewards?.[1]?.points || 250;
+    document.getElementById('shopNameDisplay').innerText = shopkeeperData.storeName || shopkeeperData.name;
+    
+    // Save store settings
+    document.getElementById('saveStoreBtn').addEventListener('click', () => {
+      shopkeeperData.storeName = document.getElementById('storeName').value;
+      shopkeeperData.storeDesc = document.getElementById('storeDesc').value;
+      shopkeeperData.pointsPerPurchase = parseInt(document.getElementById('pointsPerPurchase').value);
+      shopkeeperData.rewards = [
+        { name: document.getElementById('reward1Name').value, points: parseInt(document.getElementById('reward1Points').value) },
+        { name: document.getElementById('reward2Name').value, points: parseInt(document.getElementById('reward2Points').value) }
+      ];
+      
+      updateShopkeeperInStorage();
+      alert('✅ Store settings saved!');
+    });
     
     // Generate QR Code
-    const qrData = JSON.stringify({ storeId: "coffee_001", storeName: "Green Bean Coffee", action: "earn_points" });
+    const qrData = JSON.stringify({ 
+      storeId: shopkeeperData.id, 
+      storeName: shopkeeperData.storeName || shopkeeperData.name, 
+      action: "earn_points",
+      pointsValue: shopkeeperData.pointsPerPurchase || 10
+    });
+    
     new QRCode(document.getElementById("qrcode"), { 
       text: `https://scan2earn.app/scan?data=${encodeURIComponent(qrData)}`, 
       width: 200, 
@@ -324,68 +283,56 @@
         link.download = "store_qrcode.png"; 
         link.href = canvas.toDataURL(); 
         link.click(); 
-      } else {
-        alert("QR code not ready yet");
       }
     });
     
-    // Modal functionality
+    // Award points modal
     const modal = document.getElementById("pointsModal");
     document.getElementById("awardPointsBtn")?.addEventListener("click", () => modal.classList.add("active"));
     document.getElementById("closeModal")?.addEventListener("click", () => modal.classList.remove("active"));
     document.getElementById("submitPoints")?.addEventListener("click", () => {
       const address = document.getElementById("customerAddress").value;
       const points = parseInt(document.getElementById("pointsAmount").value);
+      
       if (address && points) {
-        let customer = customers.find(c => c.address === address);
-        if (!customer) { 
-          customer = { address, points: 0, visits: 0 }; 
-          customers.push(customer); 
+        // Find customer in all users
+        let customerFound = false;
+        allUsers.customers.forEach(customer => {
+          if (customer.walletAddress === address || customer.email === address) {
+            customer.totalPoints = (customer.totalPoints || 0) + points;
+            customer.history = customer.history || [];
+            customer.history.unshift({
+              action: `Earned ${points} points from ${shopkeeperData.storeName || shopkeeperData.name}`,
+              date: new Date().toLocaleString(),
+              points: points
+            });
+            customerFound = true;
+          }
+        });
+        
+        if (customerFound) {
+          localStorage.setItem('users', JSON.stringify(allUsers));
+          alert(`✅ ${points} points awarded!\n\nGasless transaction via UGF!`);
+          modal.classList.remove("active");
+          document.getElementById("customerAddress").value = "";
+        } else {
+          alert('Customer not found. Make sure they have an account.');
         }
-        customer.points += points; 
-        customer.visits++;
-        saveCustomers(); 
-        renderCustomers();
-        alert(`✅ ${points} points awarded to ${address.substring(0, 10)}...\n\nGasless transaction via UGF!`);
-        modal.classList.remove("active");
-        document.getElementById("customerAddress").value = "";
-        document.getElementById("pointsAmount").value = "10";
-      } else alert("Please fill all fields");
+      } else {
+        alert('Please fill all fields');
+      }
     });
     
-    // Save store settings
-    document.getElementById("saveStoreBtn")?.addEventListener("click", () => {
-      const storeData = { 
-        name: document.getElementById("storeName").value, 
-        desc: document.getElementById("storeDesc").value, 
-        pointsPerPurchase: document.getElementById("pointsPerPurchase").value, 
-        rewards: [
-          { name: document.getElementById("reward1Name").value, points: document.getElementById("reward1Points").value },
-          { name: document.getElementById("reward2Name").value, points: document.getElementById("reward2Points").value }
-        ] 
-      };
-      localStorage.setItem('storeData', JSON.stringify(storeData));
-      alert("✅ Store settings saved!");
-    });
-    
-    // Load saved store data
-    const savedStore = localStorage.getItem('storeData');
-    if (savedStore) { 
-      const data = JSON.parse(savedStore); 
-      if(document.getElementById("storeName")) document.getElementById("storeName").value = data.name; 
-      if(document.getElementById("storeDesc")) document.getElementById("storeDesc").value = data.desc; 
-      if(document.getElementById("pointsPerPurchase")) document.getElementById("pointsPerPurchase").value = data.pointsPerPurchase; 
-      if(data.rewards && data.rewards[0]) { 
-        if(document.getElementById("reward1Name")) document.getElementById("reward1Name").value = data.rewards[0].name; 
-        if(document.getElementById("reward1Points")) document.getElementById("reward1Points").value = data.rewards[0].points; 
-      } 
-      if(data.rewards && data.rewards[1]) { 
-        if(document.getElementById("reward2Name")) document.getElementById("reward2Name").value = data.rewards[1].name; 
-        if(document.getElementById("reward2Points")) document.getElementById("reward2Points").value = data.rewards[1].points; 
-      } 
+    function copyWallet() {
+      navigator.clipboard.writeText(shopkeeperData.walletAddress);
+      alert('Wallet address copied!');
     }
     
-    renderCustomers();
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    });
     
     // Dark mode toggle
     const toggleBtn = document.getElementById('darkModeToggle');

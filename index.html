@@ -48,9 +48,24 @@
     nav {
       background-color: var(--nav-bg) !important;
       backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
+    }
+    
+    .btn-glow:hover {
+      box-shadow: 0 0 15px rgba(59,130,246,0.5);
     }
     
     html.dark .bg-white { background-color: var(--card-bg) !important; }
+    html.dark .bg-gray-50 { background-color: var(--bg-secondary) !important; }
     html.dark .text-gray-900 { color: var(--text-primary) !important; }
     html.dark .text-gray-600 { color: var(--text-secondary) !important; }
     html.dark .border-gray-200 { border-color: var(--border-color) !important; }
@@ -65,7 +80,7 @@
 <body>
 
   <!-- Navigation -->
-  <nav class="sticky top-0 z-50 border-b shadow-sm transition-all duration-300" style="border-color: var(--border-color);">
+  <nav class="sticky top-0 z-50 shadow-sm transition-all duration-300">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <i class="fas fa-qrcode text-2xl text-blue-600"></i>
@@ -75,9 +90,9 @@
         <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
           <i id="darkModeIcon" class="fas fa-moon" style="color: var(--text-primary);"></i>
         </button>
-        <button id="launchAppBtn" class="bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition flex items-center gap-2">
+        <a href="login.html" class="bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition flex items-center gap-2" style="text-decoration: none;">
           <i class="fas fa-wallet"></i> Launch dApp
-        </button>
+        </a>
       </div>
     </div>
   </nav>
@@ -109,10 +124,10 @@
           </p>
           
           <div class="flex flex-wrap gap-4 mt-8">
-            <a href="shopkeeper.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2" style="text-decoration: none;">
+            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
               <i class="fas fa-store"></i> I'm a shopkeeper
             </a>
-            <a href="customer.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2" style="text-decoration: none;">
+            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
               <i class="fas fa-user"></i> I'm a customer
             </a>
           </div>
@@ -200,10 +215,6 @@
           icon.classList.remove('fa-moon');
           icon.classList.add('fa-sun');
         }
-      });
-      
-      document.getElementById('launchAppBtn')?.addEventListener('click', () => {
-        window.location.href = 'customer.html';
       });
     })();
   </script>

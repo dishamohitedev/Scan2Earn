@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan2Earn | Login / Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --border-color: #e5e7eb;
+      --card-bg: #ffffff;
+      --nav-bg: rgba(255,255,255,0.95);
+    }
+    
+    html.dark {
+      --bg-primary: #0f0f12;
+      --bg-secondary: #1a1a1e;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --border-color: #2a2a30;
+      --card-bg: #1f1f24;
+      --nav-bg: rgba(15,15,18,0.95);
+    }
+    
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    nav {
+      background-color: var(--nav-bg) !important;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    input, select {
+      background-color: var(--bg-secondary) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-primary) !important;
+    }
+    
+    .google-btn {
+      background: white;
+      color: #757575;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .google-btn:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    html.dark .google-btn {
+      background: #2a2a30;
+      color: #e0e0e0;
+      border-color: #4a4a50;
+    }
+    
+    html.dark .google-btn:hover {
+      background: #3a3a40;
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .divider::before {
+      margin-right: 1rem;
+    }
+    
+    .divider::after {
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-qrcode text-2xl text-blue-600"></i>
+        <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="hover:text-blue-600 transition" style="color: var(--text-secondary);"><i class="fas fa-home"></i> Home</a>
+        <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
+          <i id="darkModeIcon" class="fas fa-moon" style="color: var(--text-primary);"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full space-y-8">
+      
+      <div class="text-center">
+        <i class="fas fa-qrcode text-5xl text-blue-600 mb-3"></i>
+        <h1 class="text-3xl font-bold" style="color: var(--text-primary);">Welcome to Scan2Earn</h1>
+        <p style="color: var(--text-secondary);">Sign in to continue to your dashboard</p>
+      </div>
+
+      <div class="flex gap-4">
+        <button id="shopkeeperTypeBtn" class="flex-1 py-3 text-lg font-semibold rounded-xl transition-all" style="background-color: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border-color);">
+          <i class="fas fa-store mr-2"></i> Shopkeeper
+        </button>
+        <button id="customerTypeBtn" class="flex-1 py-3 text-lg font-semibold rounded-xl transition-all" style="background-color: var(--bg-secondary); color: var(--text-secondary); border: 2px solid var(--border-color);">
+          <i class="fas fa-user mr-2"></i> Customer
+        </button>
+      </div>
+
+      <input type="hidden" id="selectedAccountType" value="shopkeeper">
+
+      <button id="googleSignInBtn" class="google-btn w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-3 transition">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="divider my-6">
+        <span style="color: var(--text-secondary);">or continue with email</span>
+      </div>
+
+      <div class="rounded-2xl p-6 border shadow-lg" style="background-color: var(--card-bg); border-color: var(--border-color);">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Email Address</label>
+            <input type="email" id="email" placeholder="Enter your email" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div id="loginError" class="text-red-500 text-sm hidden"></div>
+          
+          <button id="loginBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition">
+            <i class="fas fa-sign-in-alt mr-2"></i> Sign In with Email
+          </button>
+          
+          <p class="text-center text-sm mt-4" style="color: var(--text-secondary);">
+            Don't have an account? 
+            <button id="showSignupBtn" class="text-blue-600 hover:underline font-semibold">Sign up</button>
+          </p>
+        </div>
+      </div>
+
+      <div id="signupForm" class="rounded-2xl p-6 border shadow-lg hidden" style="background-color: var(--card-bg); border-color: var(--border-color);">
+        <h2 class="text-xl font-bold mb-4 text-center" style="color: var(--text-primary);">Create Account</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Full Name</label>
+            <input type="text" id="signupName" placeholder="Enter your full name" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div id="storeNameField" class="hidden">
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Store/Business Name</label>
+            <input type="text" id="signupStoreName" placeholder="Enter your store name" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Email Address</label>
+            <input type="email" id="signupEmail" placeholder="Enter your email" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Password</label>
+            <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Confirm Password</label>
+            <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" class="w-full px-4 py-2 rounded-xl border">
+          </div>
+          
+          <div id="signupError" class="text-red-500 text-sm hidden"></div>
+          <div id="signupSuccess" class="text-green-500 text-sm hidden"></div>
+          
+          <button id="signupBtn" class="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition">
+            <i class="fas fa-user-plus mr-2"></i> Create Account
+          </button>
+          
+          <p class="text-center text-sm mt-4" style="color: var(--text-secondary);">
+            Already have an account? 
+            <button id="showLoginBtn" class="text-blue-600 hover:underline font-semibold">Sign in</button>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, doc, setDoc, getDoc } from './firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    let selectedType = 'shopkeeper';
+    const shopkeeperBtn = document.getElementById('shopkeeperTypeBtn');
+    const customerBtn = document.getElementById('customerTypeBtn');
+    const storeNameField = document.getElementById('storeNameField');
+
+    shopkeeperBtn.addEventListener('click', () => {
+      selectedType = 'shopkeeper';
+      shopkeeperBtn.style.color = 'var(--text-primary)';
+      customerBtn.style.color = 'var(--text-secondary)';
+      document.getElementById('selectedAccountType').value = 'shopkeeper';
+      storeNameField.classList.remove('hidden');
+    });
+
+    customerBtn.addEventListener('click', () => {
+      selectedType = 'customer';
+      customerBtn.style.color = 'var(--text-primary)';
+      shopkeeperBtn.style.color = 'var(--text-secondary)';
+      document.getElementById('selectedAccountType').value = 'customer';
+      storeNameField.classList.add('hidden');
+    });
+
+    // Check if user is already logged in
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+          if (userData.type === 'shopkeeper') {
+            window.location.href = 'shopkeeper.html';
+          } else {
+            window.location.href = 'customer.html';
+          }
+        }
+      }
+    });
+
+    // Google Sign In
+    document.getElementById('googleSignInBtn').addEventListener('click', async () => {
+      const accountType = document.getElementById('selectedAccountType').value;
+      
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+          const walletAddress = '0x' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 8);
+          
+          const userData = {
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName || user.email.split('@')[0],
+            type: accountType,
+            walletAddress: walletAddress,
+            createdAt: new Date().toISOString(),
+            photoURL: user.photoURL || null
+          };
+          
+          if (accountType === 'shopkeeper') {
+            const storeName = prompt('Please enter your store/business name:');
+            if (!storeName) {
+              await auth.signOut();
+              alert('Store name is required for shopkeeper accounts');
+              return;
+            }
+            userData.storeName = storeName;
+            userData.storeDesc = 'Welcome to my store! Earn loyalty points with every purchase.';
+            userData.pointsPerPurchase = 10;
+            userData.rewards = [
+              { name: 'Free Item', points: 100 },
+              { name: 'Discount', points: 250 }
+            ];
+            userData.customers = [];
+          } else {
+            userData.totalPoints = 0;
+            userData.history = [];
+          }
+          
+          await setDoc(doc(db, 'users', user.uid), userData);
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+        } else {
+          const userData = userDoc.data();
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+        }
+        
+        if (accountType === 'shopkeeper') {
+          window.location.href = 'shopkeeper.html';
+        } else {
+          window.location.href = 'customer.html';
+        }
+        
+      } catch (error) {
+        console.error('Google Sign In Error:', error);
+        alert('Google Sign In failed: ' + error.message);
+      }
+    });
+
+    // Show Sign Up Form
+    document.getElementById('showSignupBtn').addEventListener('click', () => {
+      document.querySelector('.rounded-2xl.p-6.border.shadow-lg').classList.add('hidden');
+      document.getElementById('signupForm').classList.remove('hidden');
+    });
+
+    document.getElementById('showLoginBtn').addEventListener('click', () => {
+      document.getElementById('signupForm').classList.add('hidden');
+      document.querySelector('.rounded-2xl.p-6.border.shadow-lg').classList.remove('hidden');
+    });
+
+    // Email/Password Sign Up
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+      const name = document.getElementById('signupName').value;
+      const storeName = document.getElementById('signupStoreName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupConfirmPassword').value;
+      
+      const errorDiv = document.getElementById('signupError');
+      const successDiv = document.getElementById('signupSuccess');
+      
+      errorDiv.classList.add('hidden');
+      successDiv.classList.add('hidden');
+      
+      if (!name || !email || !password) {
+        errorDiv.textContent = 'Please fill in all required fields';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      if (password.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      if (selectedType === 'shopkeeper' && !storeName) {
+        errorDiv.textContent = 'Please enter your store/business name';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        const walletAddress = '0x' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 8);
+        
+        const userData = {
+          uid: user.uid,
+          email: email,
+          name: name,
+          type: selectedType,
+          walletAddress: walletAddress,
+          createdAt: new Date().toISOString()
+        };
+        
+        if (selectedType === 'shopkeeper') {
+          userData.storeName = storeName;
+          userData.storeDesc = 'Welcome to my store! Earn loyalty points with every purchase.';
+          userData.pointsPerPurchase = 10;
+          userData.rewards = [
+            { name: 'Free Item', points: 100 },
+            { name: 'Discount', points: 250 }
+          ];
+          userData.customers = [];
+        } else {
+          userData.totalPoints = 0;
+          userData.history = [];
+        }
+        
+        await setDoc(doc(db, 'users', user.uid), userData);
+        
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        
+        successDiv.textContent = 'Account created successfully! Redirecting...';
+        successDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+          if (selectedType === 'shopkeeper') {
+            window.location.href = 'shopkeeper.html';
+          } else {
+            window.location.href = 'customer.html';
+          }
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Signup error:', error);
+        if (error.code === 'auth/email-already-in-use') {
+          errorDiv.textContent = 'Email already registered. Please login.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorDiv.textContent = 'Invalid email address.';
+        } else {
+          errorDiv.textContent = error.message;
+        }
+        errorDiv.classList.remove('hidden');
+      }
+    });
+
+    // Email/Password Login
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.classList.add('hidden');
+      
+      if (!email || !password) {
+        errorDiv.textContent = 'Please fill in all fields';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+          errorDiv.textContent = 'User data not found. Please contact support.';
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+        
+        const userData = userDoc.data();
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        
+        if (userData.type === 'shopkeeper') {
+          window.location.href = 'shopkeeper.html';
+        } else {
+          window.location.href = 'customer.html';
+        }
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        if (error.code === 'auth/user-not-found') {
+          errorDiv.textContent = 'No account found with this email. Please sign up first.';
+        } else if (error.code === 'auth/wrong-password') {
+          errorDiv.textContent = 'Incorrect password. Please try again.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorDiv.textContent = 'Invalid email address.';
+        } else {
+          errorDiv.textContent = 'Login failed. Please check your credentials.';
+        }
+        errorDiv.classList.remove('hidden');
+      }
+    });
+
+    // Dark mode
+    const toggleBtn = document.getElementById('darkModeToggle');
+    const icon = document.getElementById('darkModeIcon');
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    
+    if (isDark) { 
+      document.documentElement.classList.add('dark'); 
+      icon.classList.remove('fa-moon'); 
+      icon.classList.add('fa-sun'); 
+    }
+    
+    toggleBtn?.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) { 
+        document.documentElement.classList.remove('dark'); 
+        localStorage.setItem('darkMode', 'false'); 
+        icon.classList.remove('fa-sun'); 
+        icon.classList.add('fa-moon'); 
+      } else { 
+        document.documentElement.classList.add('dark'); 
+        localStorage.setItem('darkMode', 'true'); 
+        icon.classList.remove('fa-moon'); 
+        icon.classList.add('fa-sun'); 
+      }
+    });
+  </script>
+</body>
+</html>
