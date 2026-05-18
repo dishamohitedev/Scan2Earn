@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+    
     :root {
       --bg-primary: #ffffff;
       --bg-secondary: #f9fafb;
@@ -16,7 +17,9 @@
       --text-secondary: #4b5563;
       --border-color: #e5e7eb;
       --card-bg: #ffffff;
+      --nav-bg: rgba(255,255,255,0.95);
     }
+    
     html.dark {
       --bg-primary: #0f0f12;
       --bg-secondary: #1a1a1e;
@@ -24,43 +27,53 @@
       --text-secondary: #9ca3af;
       --border-color: #2a2a30;
       --card-bg: #1f1f24;
+      --nav-bg: rgba(15,15,18,0.95);
     }
+    
     body {
       background-color: var(--bg-primary);
       color: var(--text-primary);
       transition: all 0.3s ease;
-      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
     }
+    
     .gradient-text {
       background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
-    .card-hover {
-      transition: all 0.3s ease;
+    
+    nav {
+      background-color: var(--nav-bg) !important;
+      backdrop-filter: blur(12px);
     }
-    .card-hover:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
-    }
+    
     html.dark .bg-white { background-color: var(--card-bg) !important; }
-    html.dark .bg-gray-50 { background-color: var(--bg-secondary) !important; }
     html.dark .text-gray-900 { color: var(--text-primary) !important; }
-    html.dark .text-gray-600, html.dark .text-gray-500 { color: var(--text-secondary) !important; }
+    html.dark .text-gray-600 { color: var(--text-secondary) !important; }
     html.dark .border-gray-200 { border-color: var(--border-color) !important; }
+    
+    #darkModeToggle {
+      background-color: var(--bg-secondary);
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm" style="background-color: var(--nav-bg, rgba(255,255,255,0.8));">
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 border-b shadow-sm transition-all duration-300" style="border-color: var(--border-color);">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <i class="fas fa-qrcode text-2xl text-blue-600"></i>
         <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
       </div>
       <div class="flex items-center gap-4">
-        <button id="darkModeToggle" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-          <i id="darkModeIcon" class="fas fa-moon text-gray-700"></i>
+        <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
+          <i id="darkModeIcon" class="fas fa-moon" style="color: var(--text-primary);"></i>
         </button>
         <button id="launchAppBtn" class="bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition flex items-center gap-2">
           <i class="fas fa-wallet"></i> Launch dApp
@@ -69,96 +82,130 @@
     </div>
   </nav>
 
-  <section class="relative overflow-hidden pt-20 pb-28" style="background: linear-gradient(135deg, rgba(59,130,246,0.05), rgba(139,92,246,0.05));">
-    <div class="max-w-7xl mx-auto px-6">
+  <!-- Hero Section Only -->
+  <section class="relative overflow-hidden min-h-screen flex items-center" style="background: linear-gradient(135deg, rgba(59,130,246,0.05), rgba(139,92,246,0.05));">
+    <div class="absolute top-20 right-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-6 py-20">
       <div class="grid md:grid-cols-2 gap-12 items-center">
+        
+        <!-- Left Column - Text Content -->
         <div>
-          <div class="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full px-4 py-1.5 mb-6">
-            <span class="relative flex h-2 w-2"><span class="animate-ping absolute h-2 w-2 rounded-full bg-green-500"></span><span class="relative rounded-full h-2 w-2 bg-green-500"></span></span>
-            <span class="text-xs font-semibold text-gray-700">Gasless · Base Sepolia</span>
+          <div class="inline-flex items-center gap-2 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-full px-4 py-1.5 mb-6" style="background-color: var(--bg-primary); border-color: var(--border-color);">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute h-2 w-2 rounded-full bg-green-500 opacity-75"></span>
+              <span class="relative rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span class="text-xs font-semibold" style="color: var(--text-secondary);">Gasless · Base Sepolia</span>
           </div>
-          <h1 class="text-5xl md:text-6xl font-extrabold leading-tight text-gray-900">Loyalty points on <span class="gradient-text">blockchain</span> without ETH.</h1>
-          <p class="text-lg text-gray-600 mt-6">Scan QR, earn tokens, redeem rewards — gas fees paid invisibly. Perfect for local shops & customers.</p>
-          <div class="flex gap-4 mt-8">
-            <a href="shopkeeper.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition flex items-center gap-2">
+          
+          <h1 class="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight" style="color: var(--text-primary);">
+            Loyalty points on <span class="gradient-text">blockchain</span> <br> without ETH.
+          </h1>
+          
+          <p class="text-lg mt-6 max-w-lg leading-relaxed" style="color: var(--text-secondary);">
+            Scan QR, earn tokens, redeem rewards — gas fees paid invisibly. Perfect for local shops & customers.
+          </p>
+          
+          <div class="flex flex-wrap gap-4 mt-8">
+            <a href="shopkeeper.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2" style="text-decoration: none;">
               <i class="fas fa-store"></i> I'm a shopkeeper
             </a>
-            <a href="customer.html" class="border-2 border-gray-300 hover:border-blue-400 text-gray-800 font-semibold py-3 px-8 rounded-xl transition flex items-center gap-2">
+            <a href="customer.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2" style="text-decoration: none;">
               <i class="fas fa-user"></i> I'm a customer
             </a>
           </div>
-          <div class="flex items-center gap-4 mt-8 text-sm text-gray-500">
+          
+          <div class="flex items-center gap-6 mt-10 text-sm" style="color: var(--text-secondary);">
             <div class="flex -space-x-2">
-              <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white">🛍️</div>
-              <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center border-2 border-white">☕</div>
-              <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center border-2 border-white">🏪</div>
+              <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-700 border-2 border-white dark:border-gray-800">🛍️</div>
+              <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-700 border-2 border-white dark:border-gray-800">☕</div>
+              <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-xs font-bold text-green-700 border-2 border-white dark:border-gray-800">🏪</div>
             </div>
             <span><i class="fas fa-check-circle text-green-500"></i> No crypto knowledge needed</span>
           </div>
         </div>
-        <div class="flex justify-center">
-          <div class="bg-white rounded-3xl shadow-2xl p-6 border w-80">
-            <div class="bg-gray-50 rounded-2xl p-4">
+        
+        <!-- Right Column - Points Card -->
+        <div class="relative flex justify-center md:justify-end">
+          <div class="rounded-3xl shadow-2xl p-4 border w-80 md:w-96" style="background-color: var(--card-bg); border-color: var(--border-color);">
+            <div class="rounded-2xl p-4" style="background-color: var(--bg-secondary);">
               <div class="flex justify-between items-center mb-3">
-                <span class="font-bold text-gray-800"><i class="fas fa-coffee text-amber-600"></i> Coffee Points</span>
+                <span class="font-bold" style="color: var(--text-primary);"><i class="fas fa-mug-hot text-amber-600"></i> Coffee Points</span>
                 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">S2E Token</span>
               </div>
-              <div class="text-3xl font-black text-gray-900">245 <span class="text-gray-400 text-lg">pts</span></div>
-              <div class="mt-4 grid grid-cols-2 gap-2">
-                <div class="bg-white rounded-xl p-2 text-center"><span class="text-amber-600 text-sm">Free Coffee</span><span class="font-bold block text-gray-900">100 pts</span></div>
-                <div class="bg-white rounded-xl p-2 text-center"><span class="text-purple-600 text-sm">Free Dessert</span><span class="font-bold block text-gray-900">250 pts</span></div>
+              <div class="text-3xl font-black" style="color: var(--text-primary);">245 <span style="color: var(--text-secondary);" class="text-lg">pts</span></div>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-xl p-3 shadow-sm text-center" style="background-color: var(--card-bg);">
+                  <i class="fas fa-coffee text-amber-600 text-xl block mb-1"></i>
+                  <span class="text-amber-600 text-sm font-medium">Free Coffee</span>
+                  <span class="font-bold block text-sm" style="color: var(--text-primary);">100 pts</span>
+                </div>
+                <div class="rounded-xl p-3 shadow-sm text-center" style="background-color: var(--card-bg);">
+                  <i class="fas fa-ice-cream text-purple-600 text-xl block mb-1"></i>
+                  <span class="text-purple-600 text-sm font-medium">Free Dessert</span>
+                  <span class="font-bold block text-sm" style="color: var(--text-primary);">250 pts</span>
+                </div>
               </div>
-              <div class="mt-3 h-2 bg-gray-200 rounded-full"><div class="bg-gradient-to-r from-blue-500 to-purple-500 w-3/4 h-full rounded-full"></div></div>
+              <div class="mt-4 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-500 w-3/4 h-full rounded-full"></div>
+              </div>
+              <div class="text-center mt-3 text-xs" style="color: var(--text-secondary);">🎯 75% to next reward</div>
             </div>
-            <div class="flex justify-center mt-4"><div class="bg-black p-3 rounded-xl"><i class="fas fa-qrcode text-white text-3xl"></i></div></div>
+            <div class="flex justify-center mt-4">
+              <div class="bg-black p-2 rounded-xl"><i class="fas fa-qrcode text-white text-4xl"></i></div>
+            </div>
           </div>
         </div>
+        
       </div>
     </div>
   </section>
 
-  <section id="how-it-works" class="py-20 bg-white">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <h2 class="text-3xl font-bold text-gray-900">How It Works</h2>
-      <p class="text-gray-500 mt-2 mb-12">Simple 4-step loyalty loop</p>
-      <div class="grid md:grid-cols-4 gap-6">
-        <div class="bg-gray-50 rounded-2xl p-6 card-hover"><div class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-store text-blue-600 text-2xl"></i></div><h3 class="font-bold text-xl">1. Store creates</h3><p class="text-gray-500 text-sm">Define rewards & points per purchase</p></div>
-        <div class="bg-gray-50 rounded-2xl p-6 card-hover"><div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-qrcode text-purple-600 text-2xl"></i></div><h3 class="font-bold text-xl">2. Generate QR</h3><p class="text-gray-500 text-sm">Unique QR for each store</p></div>
-        <div class="bg-gray-50 rounded-2xl p-6 card-hover"><div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-camera text-green-600 text-2xl"></i></div><h3 class="font-bold text-xl">3. Scan & Earn</h3><p class="text-gray-500 text-sm">Points minted instantly on-chain</p></div>
-        <div class="bg-gray-50 rounded-2xl p-6 card-hover"><div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-gift text-amber-600 text-2xl"></i></div><h3 class="font-bold text-xl">4. Redeem reward</h3><p class="text-gray-500 text-sm">Burn points for free products</p></div>
-      </div>
+  <!-- Simple Footer -->
+  <footer class="border-t py-8 text-center text-sm" style="background-color: var(--bg-secondary); border-color: var(--border-color); color: var(--text-secondary);">
+    <div class="max-w-7xl mx-auto px-6">
+      <p>© 2026 Scan2Earn — Web3 Loyalty for Everyone</p>
     </div>
-  </section>
-
-  <footer class="bg-gray-900 text-gray-400 py-12 text-center">
-    <p>© 2025 Scan2Earn — Web3 Loyalty for Everyone</p>
   </footer>
 
   <script>
-    const toggleBtn = document.getElementById('darkModeToggle');
-    const icon = document.getElementById('darkModeIcon');
-    const isDark = localStorage.getItem('darkMode') === 'true';
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
-    }
-    toggleBtn.addEventListener('click', () => {
-      if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('darkMode', 'false');
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
-      } else {
+    (function() {
+      const toggleBtn = document.getElementById('darkModeToggle');
+      const icon = document.getElementById('darkModeIcon');
+      
+      const savedMode = localStorage.getItem('darkMode');
+      const isDark = savedMode === 'true';
+      
+      if (isDark) {
         document.documentElement.classList.add('dark');
-        localStorage.setItem('darkMode', 'true');
         icon.classList.remove('fa-moon');
         icon.classList.add('fa-sun');
+      } else {
+        document.documentElement.classList.remove('dark');
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
       }
-    });
-    document.getElementById('launchAppBtn').addEventListener('click', () => {
-      window.location.href = 'customer.html';
-    });
+      
+      toggleBtn.addEventListener('click', () => {
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('darkMode', 'false');
+          icon.classList.remove('fa-sun');
+          icon.classList.add('fa-moon');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('darkMode', 'true');
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+        }
+      });
+      
+      document.getElementById('launchAppBtn')?.addEventListener('click', () => {
+        window.location.href = 'customer.html';
+      });
+    })();
   </script>
 </body>
 </html>
