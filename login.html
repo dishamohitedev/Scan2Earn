@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan2Earn | Login / Sign Up</title>
+  <title>Scan2Earn | Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-  <!-- Firebase compat CDN — plain scripts, no module imports needed -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -24,7 +23,6 @@
       --border-color: #e5e7eb;
       --card-bg: #ffffff;
     }
-
     html.dark {
       --bg-primary: #0f0f12;
       --bg-secondary: #1a1a1e;
@@ -34,145 +32,132 @@
       --card-bg: #1f1f24;
     }
 
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: all 0.3s ease;
-    }
+    body { background-color: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; }
+    nav  { background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
 
-    nav {
-      background-color: var(--bg-primary);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    /* Role toggle buttons */
     .role-btn {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      font-size: 0.95rem;
+      flex: 1; padding: 0.75rem 1rem; border-radius: 0.75rem;
+      font-weight: 600; font-size: 0.95rem;
       border: 2px solid var(--border-color);
       background-color: var(--bg-secondary);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.2s ease;
+      color: var(--text-secondary); cursor: pointer; transition: all 0.2s ease;
     }
-
     .role-btn.active {
-      background-color: #2563eb;
-      color: #ffffff;
-      border-color: #2563eb;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+      background-color: #2563eb; color: #fff;
+      border-color: #2563eb; box-shadow: 0 4px 14px rgba(37,99,235,0.35);
     }
+    .role-btn:hover:not(.active) { border-color: #93c5fd; color: var(--text-primary); }
 
-    .role-btn:hover:not(.active) {
-      border-color: #93c5fd;
-      color: var(--text-primary);
-    }
-
-    /* Google button */
     .btn-google {
-      background: white;
-      color: #757575;
-      border: 1px solid #ddd;
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      cursor: pointer;
-      transition: background 0.2s;
-      box-sizing: border-box;
+      background: white; color: #757575; border: 1px solid #ddd;
+      width: 100%; padding: 1rem; border-radius: 0.75rem;
+      font-weight: 600; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.75rem; cursor: pointer; transition: all 0.2s; box-sizing: border-box;
     }
-    .btn-google:hover { background: #f5f5f5; }
-    html.dark .btn-google {
-      background: #2a2a30;
-      color: #e0e0e0;
-      border-color: #4a4a50;
+    .btn-google.btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
-    html.dark .btn-google:hover { background: #35353d; }
+    .btn-google:hover:not(.btn-loading) { 
+      background: #f5f5f5; 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    html.dark .btn-google { background: #2a2a30; color: #e0e0e0; border-color: #4a4a50; }
+    html.dark .btn-google:hover:not(.btn-loading) { background: #35353d; }
 
-    /* Divider */
-    .divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .divider::before { margin-right: 1rem; }
-    .divider::after  { margin-left: 1rem; }
-
-    /* Inputs */
-    input[type="text"],
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 0.55rem 1rem;
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-color);
-      background-color: var(--bg-secondary);
-      color: var(--text-primary);
-      font-size: 0.9rem;
-      box-sizing: border-box;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input:focus { border-color: #3b82f6; }
-
-    /* Cards */
-    .auth-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 1rem;
-      padding: 1.5rem;
-    }
-
-    /* Error */
-    .err-msg {
-      color: #ef4444;
-      font-size: 0.82rem;
-      display: none;
-      margin-bottom: 0.25rem;
-    }
-
-    /* Link buttons */
-    .link-btn {
-      background: none;
-      border: none;
-      color: #2563eb;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.875rem;
-      padding: 0;
-    }
-    .link-btn:hover { text-decoration: underline; }
-
-    /* Dark mode toggle */
     #darkModeToggle {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--bg-secondary);
-      border: none;
-      cursor: pointer;
+      width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+      display: flex; align-items: center; justify-content: center;
+      background-color: var(--bg-secondary); border: none; cursor: pointer;
+    }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 1.25rem; padding: 2rem;
+      width: 90%; max-width: 380px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+      animation: popIn 0.2s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+    .modal-box h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem; }
+    .modal-box p  { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1.2rem; }
+    .modal-box input { 
+      width: 100%; padding: 0.75rem; border-radius: 0.75rem;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary); color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+    .modal-err  { color: #ef4444; font-size: 0.82rem; display: none; margin-bottom: 0.75rem; text-align: center; }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+    .modal-actions button { flex: 1; padding: 0.65rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-cancel  { background: var(--bg-secondary); color: var(--text-secondary); }
+    .btn-cancel:hover  { background: var(--border-color); }
+    .btn-confirm { background: #2563eb; color: white; }
+    .btn-confirm:hover { background: #1d4ed8; }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: none;
+      animation: slideIn 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Store Name Modal -->
+  <div class="modal-overlay" id="storeModal">
+    <div class="modal-box">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+        <div style="width:2.5rem;height:2.5rem;background:#dbeafe;border-radius:0.75rem;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-store" style="color:#2563eb; font-size: 1.2rem;"></i>
+        </div>
+        <div>
+          <h2 style="margin:0;">Your Store Name</h2>
+          <p style="margin:0;">This will appear on your QR code</p>
+        </div>
+      </div>
+      <input type="text" id="modalStoreName" placeholder="e.g. Green Bean Coffee" autocomplete="off">
+      <div class="modal-err" id="modalErr">Please enter a store name.</div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="modalCancel">Cancel</button>
+        <button class="btn-confirm" id="modalConfirm">Continue</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Nav -->
   <nav class="sticky top-0 z-50 py-4 px-6">
@@ -182,7 +167,7 @@
         <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
       </div>
       <div class="flex items-center gap-4">
-        <a href="index.html" style="color:var(--text-secondary); text-decoration:none; font-size:0.9rem;">
+        <a href="index.html" style="color:var(--text-secondary);text-decoration:none;font-size:0.9rem;">
           <i class="fas fa-home"></i> Home
         </a>
         <button id="darkModeToggle">
@@ -196,22 +181,21 @@
   <div class="min-h-screen flex items-center justify-center py-12 px-4">
     <div class="max-w-md w-full space-y-6">
 
-      <!-- Header -->
       <div class="text-center">
-        <i class="fas fa-qrcode text-5xl text-blue-600 mb-3"></i>
-        <h1 class="text-3xl font-bold" style="color:var(--text-primary);">Welcome to Scan2Earn</h1>
-        <p style="color:var(--text-secondary);">Sign in to continue</p>
+        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <i class="fas fa-qrcode text-4xl text-white"></i>
+        </div>
+        <h1 class="text-3xl font-bold" style="color:var(--text-primary);">Scan2Earn</h1>
+        <p class="mt-2" style="color:var(--text-secondary);">Sign in to start earning loyalty points</p>
       </div>
 
-      <!-- Role Selector -->
-      <div style="display:flex; gap:1rem;">
+      <div style="display:flex;gap:1rem; margin-top: 2rem;">
         <button class="role-btn active" id="btnShop">🏪 Shopkeeper</button>
         <button class="role-btn" id="btnCust">👤 Customer</button>
       </div>
 
-      <!-- Google -->
-      <button class="btn-google" id="btnGoogle">
-        <svg width="20" height="20" viewBox="0 0 24 24">
+      <button class="btn-google" id="btnGoogle" style="margin-top: 2rem;">
+        <svg width="22" height="22" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -220,208 +204,227 @@
         Continue with Google
       </button>
 
-      <!-- Divider -->
-      <div class="divider">or continue with email</div>
-
-      <!-- Login Card -->
-      <div class="auth-card" id="loginCard">
-        <div class="space-y-3">
-          <input type="email" id="loginEmail" placeholder="Email">
-          <input type="password" id="loginPassword" placeholder="Password">
-          <div class="err-msg" id="loginErr"></div>
-          <button onclick="doLogin()"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition">
-            Sign In
-          </button>
-          <p class="text-center text-sm" style="color:var(--text-secondary);">
-            <button class="link-btn" id="btnShowSignup">Create an account</button>
-          </p>
-        </div>
-      </div>
-
-      <!-- Signup Card -->
-      <div class="auth-card" id="signupCard" style="display:none;">
-        <div class="space-y-3">
-          <input type="text" id="signupName" placeholder="Full Name">
-          <div id="storeFieldWrap">
-            <input type="text" id="storeName" placeholder="Store Name">
-          </div>
-          <input type="email" id="signupEmail" placeholder="Email">
-          <input type="password" id="signupPass" placeholder="Password (min 6 characters)">
-          <input type="password" id="signupConfirm" placeholder="Confirm Password">
-          <div class="err-msg" id="signupErr"></div>
-          <button onclick="doSignup()"
-            class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-xl transition">
-            Create Account
-          </button>
-          <p class="text-center text-sm" style="color:var(--text-secondary);">
-            <button class="link-btn" id="btnShowLogin">Back to Login</button>
-          </p>
-        </div>
+      <div class="text-center text-xs" style="color: var(--text-secondary); margin-top: 2rem;">
+        <i class="fas fa-shield-alt"></i> Secure login • No password needed
       </div>
 
     </div>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script>
-    // ── Firebase Init ────────────────────────────────────────────────────────
-    firebase.initializeApp({
-      apiKey: "AIzaSyA1w9R3bLBEf4eAJL9wiNHbmn183IPBtrk",
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1W9R3bLBEf4eAJL9wiNHbmn183IPBtrk",
       authDomain: "scan2earn-771b6.firebaseapp.com",
       projectId: "scan2earn-771b6",
       storageBucket: "scan2earn-771b6.firebasestorage.app",
       messagingSenderId: "511366033486",
       appId: "1:511366033486:web:6de6dd63e06088aac8131f"
-    });
-    var auth = firebase.auth();
-    var db   = firebase.firestore();
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let selectedType = 'shopkeeper';
 
-    // ── State ────────────────────────────────────────────────────────────────
-    var selectedType = 'shopkeeper';
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-    function showErr(id, msg) {
-      var el = document.getElementById(id);
-      el.textContent = msg;
-      el.style.display = 'block';
-    }
-    function hideErr(id) { document.getElementById(id).style.display = 'none'; }
-
-    function redirect(type) {
-      window.location.href = type === 'shopkeeper' ? 'shopkeeper.html' : 'customer.html';
+    function showToast(msg, isError = true) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.backgroundColor = isError ? '#ef4444' : '#10b981';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
     }
 
-    // ── Dark Mode ────────────────────────────────────────────────────────────
-    var dmIcon = document.getElementById('darkModeIcon');
-    if (localStorage.getItem('darkMode') === 'true') {
-      document.documentElement.classList.add('dark');
-      dmIcon.classList.replace('fa-moon', 'fa-sun');
+    function redirect(type) { 
+      window.location.href = type === 'shopkeeper' ? 'shopkeeper.html' : 'customer.html'; 
     }
-    document.getElementById('darkModeToggle').addEventListener('click', function () {
-      var dark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('darkMode', dark ? 'true' : 'false');
+
+    function buildRoleData(type, storeName) {
+      if (type === 'shopkeeper') {
+        return { 
+          storeName: storeName || 'My Store', 
+          rewards: [
+            { name: 'Free Coffee', points: 100 }, 
+            { name: 'Free Dessert', points: 250 }
+          ], 
+          pointsPerPurchase: 10 
+        };
+      }
+      return { totalPoints: 0, history: [] };
+    }
+
+    async function createUserInFirestore(user, type, storeName) {
+      const wallet = '0x' + Math.random().toString(36).substring(2, 14);
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName || user.email.split('@')[0],
+        type: type,
+        walletAddress: wallet,
+        createdAt: new Date().toISOString(),
+        roles: {}
+      };
+      userData.roles[type] = buildRoleData(type, storeName);
+      
+      await db.collection('users').doc(user.uid).set(userData);
+      return userData;
+    }
+
+    function askStoreName() {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('storeModal');
+        const input = document.getElementById('modalStoreName');
+        const err = document.getElementById('modalErr');
+        const confirm = document.getElementById('modalConfirm');
+        const cancel = document.getElementById('modalCancel');
+
+        input.value = '';
+        err.style.display = 'none';
+        modal.classList.add('show');
+        setTimeout(() => input.focus(), 100);
+
+        function cleanup() {
+          modal.classList.remove('show');
+          confirm.removeEventListener('click', onConfirm);
+          cancel.removeEventListener('click', onCancel);
+        }
+        
+        function onConfirm() {
+          const val = input.value.trim();
+          if (!val) { 
+            err.style.display = 'block'; 
+            return; 
+          }
+          cleanup(); 
+          resolve(val);
+        }
+        
+        function onCancel() { 
+          cleanup(); 
+          resolve(null); 
+        }
+
+        confirm.addEventListener('click', onConfirm);
+        cancel.addEventListener('click', onCancel);
+        input.onkeydown = (e) => { 
+          if (e.key === 'Enter') onConfirm(); 
+        };
+      });
+    }
+
+    // Dark Mode
+    const dmIcon = document.getElementById('darkModeIcon');
+    if (localStorage.getItem('darkMode') === 'true') { 
+      document.documentElement.classList.add('dark'); 
+      dmIcon.classList.replace('fa-moon', 'fa-sun'); 
+    }
+    
+    document.getElementById('darkModeToggle').addEventListener('click', () => {
+      const dark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', dark);
       dmIcon.className = 'fas ' + (dark ? 'fa-sun' : 'fa-moon');
-      dmIcon.style.color = 'var(--text-primary)';
     });
 
-    // ── Role Toggle ──────────────────────────────────────────────────────────
-    document.getElementById('btnShop').addEventListener('click', function () {
+    // Role Toggle
+    document.getElementById('btnShop').addEventListener('click', () => {
       selectedType = 'shopkeeper';
       document.getElementById('btnShop').classList.add('active');
       document.getElementById('btnCust').classList.remove('active');
-      document.getElementById('storeFieldWrap').style.display = 'block';
     });
-
-    document.getElementById('btnCust').addEventListener('click', function () {
+    
+    document.getElementById('btnCust').addEventListener('click', () => {
       selectedType = 'customer';
       document.getElementById('btnCust').classList.add('active');
       document.getElementById('btnShop').classList.remove('active');
-      document.getElementById('storeFieldWrap').style.display = 'none';
     });
 
-    // ── Show/Hide Cards ──────────────────────────────────────────────────────
-    document.getElementById('btnShowSignup').addEventListener('click', function () {
-      document.getElementById('loginCard').style.display  = 'none';
-      document.getElementById('signupCard').style.display = 'block';
-    });
-    document.getElementById('btnShowLogin').addEventListener('click', function () {
-      document.getElementById('signupCard').style.display = 'none';
-      document.getElementById('loginCard').style.display  = 'block';
-    });
-
-    // ── Google Sign-In ───────────────────────────────────────────────────────
-    document.getElementById('btnGoogle').addEventListener('click', async function () {
+    // ============ GOOGLE SIGN IN ============
+    document.getElementById('btnGoogle').addEventListener('click', async function() {
+      if (this.classList.contains('btn-loading')) return;
+      
       try {
-        var provider = new firebase.auth.GoogleAuthProvider();
-        var result   = await auth.signInWithPopup(provider);
-        var user     = result.user;
-        var snap     = await db.collection('users').doc(user.uid).get();
-
-        if (snap.exists) {
-          localStorage.setItem('currentUser', JSON.stringify(snap.data()));
-          redirect(snap.data().type);
-        } else {
-          var storeName = null;
-          if (selectedType === 'shopkeeper') {
-            storeName = prompt('Enter your store name:');
-            if (!storeName) { await auth.signOut(); alert('Store name is required.'); return; }
-          }
-          var wallet = '0x' + Math.random().toString(36).substring(2, 14);
-          var userData = {
-            uid: user.uid, email: user.email,
-            name: user.displayName || user.email.split('@')[0],
-            type: selectedType, walletAddress: wallet,
-            createdAt: new Date().toISOString()
-          };
-          if (selectedType === 'shopkeeper') {
-            userData.storeName = storeName;
-            userData.rewards = [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
-            userData.pointsPerPurchase = 10;
+        this.classList.add('btn-loading');
+        this.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mx-auto"></div>';
+        
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        
+        // Check if user exists in Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (userDoc.exists) {
+          // Existing user - just login
+          const userData = userDoc.data();
+          
+          // Check if user has the selected role
+          if (userData.roles && userData.roles[selectedType]) {
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            showToast(`Welcome back, ${userData.name}!`, false);
+            setTimeout(() => redirect(selectedType), 1000);
+            return;
           } else {
-            userData.totalPoints = 0; userData.history = [];
+            // User exists but doesn't have this role - add it
+            let storeName = null;
+            if (selectedType === 'shopkeeper') {
+              storeName = await askStoreName();
+              if (!storeName) {
+                this.classList.remove('btn-loading');
+                this.innerHTML = 'Continue with Google';
+                return;
+              }
+            }
+            
+            const roles = userData.roles || {};
+            roles[selectedType] = buildRoleData(selectedType, storeName);
+            await db.collection('users').doc(user.uid).update({ roles, type: selectedType });
+            
+            const updated = await db.collection('users').doc(user.uid).get();
+            localStorage.setItem('currentUser', JSON.stringify(updated.data()));
+            showToast(`Welcome to ${selectedType === 'shopkeeper' ? 'Shopkeeper' : 'Customer'} mode!`, false);
+            setTimeout(() => redirect(selectedType), 1000);
+            return;
           }
-          await db.collection('users').doc(user.uid).set(userData);
+        } else {
+          // Brand new user - create in Firestore
+          let storeName = null;
+          if (selectedType === 'shopkeeper') {
+            storeName = await askStoreName();
+            if (!storeName) {
+              await auth.signOut();
+              this.classList.remove('btn-loading');
+              this.innerHTML = 'Continue with Google';
+              return;
+            }
+          }
+          
+          const userData = await createUserInFirestore(user, selectedType, storeName);
           localStorage.setItem('currentUser', JSON.stringify(userData));
-          redirect(selectedType);
+          showToast(`Welcome to Scan2Earn, ${userData.name}!`, false);
+          setTimeout(() => redirect(selectedType), 1000);
+          return;
         }
+        
       } catch (e) {
-        alert('Google sign-in failed: ' + e.message);
+        console.error('Google sign-in error:', e);
+        showToast(e.message, true);
+        this.classList.remove('btn-loading');
+        this.innerHTML = 'Continue with Google';
       }
     });
 
-    // ── Email Login ──────────────────────────────────────────────────────────
-    async function doLogin() {
-      hideErr('loginErr');
-      var email = document.getElementById('loginEmail').value.trim();
-      var pass  = document.getElementById('loginPassword').value;
-      if (!email || !pass) { showErr('loginErr', 'Fill all fields'); return; }
-      try {
-        var cred = await auth.signInWithEmailAndPassword(email, pass);
-        var snap = await db.collection('users').doc(cred.user.uid).get();
-        if (!snap.exists) { showErr('loginErr', 'User data not found'); return; }
-        localStorage.setItem('currentUser', JSON.stringify(snap.data()));
-        redirect(snap.data().type);
-      } catch (e) {
-        showErr('loginErr', 'Invalid email or password');
-      }
-    }
-
-    // ── Email Signup ─────────────────────────────────────────────────────────
-    async function doSignup() {
-      hideErr('signupErr');
-      var name    = document.getElementById('signupName').value.trim();
-      var store   = document.getElementById('storeName').value.trim();
-      var email   = document.getElementById('signupEmail').value.trim();
-      var pass    = document.getElementById('signupPass').value;
-      var confirm = document.getElementById('signupConfirm').value;
-
-      if (!name || !email || !pass)              { showErr('signupErr', 'Fill all fields'); return; }
-      if (pass !== confirm)                       { showErr('signupErr', 'Passwords do not match'); return; }
-      if (pass.length < 6)                        { showErr('signupErr', 'Password must be 6+ characters'); return; }
-      if (selectedType === 'shopkeeper' && !store){ showErr('signupErr', 'Store name required'); return; }
-
-      try {
-        var cred   = await auth.createUserWithEmailAndPassword(email, pass);
-        var wallet = '0x' + Math.random().toString(36).substring(2, 14);
-        var userData = {
-          uid: cred.user.uid, email, name, type: selectedType,
-          walletAddress: wallet, createdAt: new Date().toISOString()
-        };
-        if (selectedType === 'shopkeeper') {
-          userData.storeName = store;
-          userData.rewards = [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
-          userData.pointsPerPurchase = 10;
-        } else {
-          userData.totalPoints = 0; userData.history = [];
-        }
-        await db.collection('users').doc(cred.user.uid).set(userData);
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        alert('Account created!');
-        redirect(selectedType);
-      } catch (e) {
-        showErr('signupErr', e.message);
-      }
-    }
+    // ============ NO AUTO REDIRECT ============
+    // We are NOT adding onAuthStateChanged redirect so users stay on login page
+    // This allows them to choose their role each time
+    
+    // Clear any existing session data on page load to prevent auto-redirect
+    window.addEventListener('load', () => {
+      // Don't auto redirect - let user choose
+      console.log('Login page ready - waiting for user action');
+    });
   </script>
 </body>
 </html>
