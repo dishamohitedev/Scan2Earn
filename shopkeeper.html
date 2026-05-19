@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan2Earn | Shopkeeper Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -24,7 +23,6 @@
       --card-bg: #ffffff;
       --nav-bg: rgba(255,255,255,0.95);
       --input-bg: #ffffff;
-      --icon-color: #4b5563;
     }
     html.dark {
       --bg-primary: #0f0f12;
@@ -35,452 +33,370 @@
       --card-bg: #1f1f24;
       --nav-bg: rgba(15,15,18,0.95);
       --input-bg: #2a2a30;
-      --icon-color: #9ca3af;
     }
-    body { background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s ease, color 0.3s ease; }
-    nav { background-color: var(--nav-bg) !important; backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); transition: background-color 0.3s ease; }
-    input, textarea { 
-      background-color: var(--input-bg) !important; 
-      border-color: var(--border-color) !important; 
-      color: var(--text-primary) !important; 
-      transition: all 0.3s ease;
-    }
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #3b82f6 !important;
-      ring: 2px solid #3b82f6;
-    }
-    label { color: var(--text-secondary) !important; }
+    body { background-color: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; }
+    nav { background-color: var(--nav-bg) !important; backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+    input, textarea { background-color: var(--input-bg) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; outline: none; }
+    input:focus, textarea:focus { border-color: #3b82f6 !important; ring: 2px solid #3b82f6; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
-    .modal-content { background: var(--bg-primary); border-radius: 20px; padding: 2rem; max-width: 500px; width: 90%; border: 1px solid var(--border-color); transition: background 0.3s ease; }
-    button, .btn-transition { transition: all 0.2s ease; }
-    .rounded-2xl, .rounded-xl, .rounded-lg { transition: background-color 0.3s ease, border-color 0.3s ease; }
-    #darkModeToggle {
-      transition: all 0.2s ease;
-    }
-    #darkModeToggle:hover {
-      transform: scale(1.05);
-      opacity: 0.9;
-    }
-    /* QR code container fix for dark mode */
-    #qrcode canvas,
-    #qrcode img {
-      background-color: white;
-      padding: 8px;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-    }
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--bg-secondary);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
+    .modal-content { background: var(--bg-primary); border-radius: 20px; padding: 1.5rem; max-width: 500px; width: 90%; border: 1px solid var(--border-color); max-height: 85vh; overflow-y: auto; }
+    .disabled-input { opacity: 0.7; background-color: var(--bg-secondary) !important; cursor: not-allowed; }
+    .section-card { transition: all 0.2s ease; }
+    .edit-mode-input { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    th { color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; }
+    .reward-item { background-color: var(--bg-secondary); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+    .badge { background-color: #3b82f6; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; }
   </style>
 </head>
 <body>
 
-  <nav class="sticky top-0 z-50 border-b shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <i class="fas fa-qrcode text-2xl text-blue-600"></i>
-        <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
-      </div>
-      <div class="flex items-center gap-4">
-        <span style="color:var(--text-secondary);"><i class="fas fa-store"></i> <span id="shopNameDisplay">Loading...</span></span>
-        <button onclick="doLogout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-        <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color:var(--bg-secondary); border: 1px solid var(--border-color); cursor: pointer;">
-          <i id="darkModeIcon" class="fas fa-moon" style="color:var(--text-primary); font-size: 1.2rem;"></i>
-        </button>
-      </div>
+<nav class="sticky top-0 z-50 border-b shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <i class="fas fa-qrcode text-2xl text-blue-600"></i>
+      <span class="font-black text-2xl bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">Scan2Earn</span>
     </div>
-  </nav>
-
-  <div class="max-w-7xl mx-auto px-6 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-bold" style="color:var(--text-primary);">Shopkeeper Dashboard</h1>
-        <p style="color:var(--text-secondary);">Manage your store and customer loyalty program</p>
-      </div>
-      <button onclick="saveStoreSettings()" class="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition btn-transition">
-        <i class="fas fa-save"></i> Save Changes
+    <div class="flex items-center gap-4">
+      <span style="color:var(--text-secondary);"><i class="fas fa-store"></i> <span id="shopNameDisplay">Loading...</span></span>
+      <button onclick="doLogout()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+      <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); cursor:pointer;">
+        <i id="darkModeIcon" class="fas fa-moon" style="color:var(--text-primary);"></i>
       </button>
     </div>
+  </div>
+</nav>
 
-    <div class="grid lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2 space-y-6">
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold" style="color:var(--text-primary);">Shopkeeper Dashboard</h1>
+    <p style="color:var(--text-secondary);">Manage your store, rewards, and track customer activity</p>
+  </div>
 
-        <div class="rounded-2xl p-6 border" style="background-color:var(--card-bg);border-color:var(--border-color);">
-          <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);">
-            <i class="fas fa-store text-blue-600 mr-2"></i> Store Information
-          </h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Store Name</label>
-              <input type="text" id="storeName" class="w-full px-4 py-2 rounded-xl border">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Description</label>
-              <textarea id="storeDesc" rows="2" class="w-full px-4 py-2 rounded-xl border"></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Wallet Address</label>
-              <div class="flex gap-2">
-                <code id="walletAddress" class="flex-1 px-4 py-2 rounded-xl text-sm" style="background-color:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);">Loading...</code>
-                <button onclick="copyWallet()" class="px-3 rounded-xl" style="background-color:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-2xl p-6 border" style="background-color:var(--card-bg);border-color:var(--border-color);">
-          <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);">
-            <i class="fas fa-tag text-purple-600 mr-2"></i> Reward Rules
-          </h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Points per Purchase</label>
-              <input type="number" id="pointsPerPurchase" class="w-32 px-4 py-2 rounded-xl border">
-            </div>
-            <div class="border-t pt-4" style="border-color:var(--border-color);">
-              <label class="block text-sm font-medium mb-2">Reward #1</label>
-              <div class="grid grid-cols-2 gap-3">
-                <input type="text"   id="reward1Name"   placeholder="Reward name" class="px-3 py-2 rounded-xl border">
-                <input type="number" id="reward1Points" placeholder="Points"      class="px-3 py-2 rounded-xl border">
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Reward #2</label>
-              <div class="grid grid-cols-2 gap-3">
-                <input type="text"   id="reward2Name"   placeholder="Reward name" class="px-3 py-2 rounded-xl border">
-                <input type="number" id="reward2Points" placeholder="Points"      class="px-3 py-2 rounded-xl border">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-6">
-        <div class="rounded-2xl p-6 border text-center" style="background-color:var(--card-bg);border-color:var(--border-color);">
-          <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);">
-            <i class="fas fa-qrcode text-green-600 mr-2"></i> Store QR Code
-          </h2>
-          <div id="qrcode" class="flex justify-center mb-4"></div>
-          <button onclick="downloadQR()" class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition btn-transition">
-            <i class="fas fa-download mr-2"></i> Download QR
+  <div class="grid lg:grid-cols-2 gap-8">
+    <!-- LEFT COLUMN -->
+    <div class="space-y-6">
+      
+      <!-- SECTION 1: STORE INFORMATION -->
+      <div class="rounded-2xl p-6 border section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold" style="color:var(--text-primary);"><i class="fas fa-store text-blue-600 mr-2"></i> Store Information</h2>
+          <button id="editStoreBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary);">
+            <i class="fas fa-pen"></i> Edit Store
           </button>
         </div>
+        <div id="storeInfoView" class="space-y-3">
+          <div><label class="text-sm" style="color:var(--text-secondary);">Store Name</label><p id="viewStoreName" class="font-semibold text-lg" style="color:var(--text-primary);">-</p></div>
+          <div><label class="text-sm" style="color:var(--text-secondary);">Description</label><p id="viewStoreDesc" style="color:var(--text-primary);">-</p></div>
+          <div><label class="text-sm" style="color:var(--text-secondary);">Wallet Address</label><p id="viewWalletAddr" class="font-mono text-sm break-all" style="color:var(--text-primary);">-</p></div>
+        </div>
+        <div id="storeInfoEdit" class="space-y-3 hidden">
+          <input type="text" id="editStoreName" placeholder="Store Name" class="w-full px-4 py-2 rounded-xl border">
+          <textarea id="editStoreDesc" rows="2" placeholder="Store Description" class="w-full px-4 py-2 rounded-xl border"></textarea>
+          <div><code id="editWalletAddr" class="text-sm break-all block p-2 rounded-lg" style="background-color:var(--bg-secondary);">-</code></div>
+          <div class="flex gap-3 pt-2">
+            <button id="saveStoreBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"><i class="fas fa-save"></i> Save Changes</button>
+            <button id="cancelStoreBtn" class="px-4 py-2 rounded-lg border" style="border-color:var(--border-color); color:var(--text-primary);"><i class="fas fa-times"></i> Cancel</button>
+          </div>
+        </div>
+      </div>
 
-        <div class="rounded-2xl p-6 border" style="background-color:var(--card-bg);border-color:var(--border-color);">
-          <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);">
-            <i class="fas fa-bolt text-yellow-600 mr-2"></i> Quick Actions
-          </h2>
-          <div class="space-y-3">
-            <button onclick="openAwardModal()" class="w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition btn-transition">
-              <i class="fas fa-plus-circle"></i> Award Points
+      <!-- SECTION 2: REWARD RULES (View/Edit + Add New) -->
+      <div class="rounded-2xl p-6 border section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+          <h2 class="text-xl font-bold" style="color:var(--text-primary);"><i class="fas fa-tag text-purple-600 mr-2"></i> Reward Rules</h2>
+          <div class="flex gap-2">
+            <button id="editRewardsBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition" style="background-color:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary);">
+              <i class="fas fa-pen"></i> Edit Rules
             </button>
-            <button onclick="window.open('scan.html','_blank')" class="w-full border py-3 rounded-xl transition hover:bg-opacity-10 hover:bg-gray-500" style="border-color:var(--border-color);color:var(--text-primary);">
-              <i class="fas fa-qrcode"></i> Test Scan QR
+            <button id="addRewardBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-700">
+              <i class="fas fa-plus"></i> Add New Reward
             </button>
           </div>
         </div>
-
-        <div class="rounded-2xl p-6 border" style="background-color:var(--card-bg);border-color:var(--border-color);">
-          <h2 class="text-sm font-semibold uppercase tracking-wide mb-3" style="color:var(--text-secondary);">Blockchain Status</h2>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span style="color:var(--text-secondary);">Network:</span><span class="text-green-600">Base Sepolia ✓</span></div>
-            <div class="flex justify-between"><span style="color:var(--text-secondary);">Gasless:</span><span class="text-green-600">UGF Active ✓</span></div>
-            <div class="flex justify-between"><span style="color:var(--text-secondary);">Token:</span><span style="color:var(--text-primary);">S2E Points</span></div>
+        
+        <!-- View Mode for Rewards -->
+        <div id="rewardsViewMode">
+          <div id="rewardsListContainer" class="space-y-2"></div>
+        </div>
+        
+        <!-- Edit Mode for Rewards -->
+        <div id="rewardsEditMode" class="hidden">
+          <div id="rewardsEditList" class="space-y-3 mb-4"></div>
+          <div class="flex gap-3 pt-2">
+            <button id="saveRewardsBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"><i class="fas fa-save"></i> Save All Changes</button>
+            <button id="cancelRewardsBtn" class="px-4 py-2 rounded-lg border" style="border-color:var(--border-color); color:var(--text-primary);"><i class="fas fa-times"></i> Cancel</button>
           </div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: CUSTOMER LIST (Scanned QR & earned points) -->
+      <div class="rounded-2xl p-6 border section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
+        <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);"><i class="fas fa-users text-green-600 mr-2"></i> Customers Who Earned Points</h2>
+        <div class="overflow-x-auto">
+          <table id="customersTable">
+            <thead>
+              <tr><th>Customer Name</th><th>Wallet Address</th><th>Points Earned</th><th>Last Activity</th></tr>
+            </thead>
+            <tbody id="customersListBody">
+              <tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">Loading customers...</td></tr>
+            </tbody>
+           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="space-y-6">
+      
+      <!-- SECTION 3: QR CODE -->
+      <div class="rounded-2xl p-6 border text-center section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
+        <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);"><i class="fas fa-qrcode text-green-600 mr-2"></i> Store QR Code</h2>
+        <div id="qrcode" class="flex justify-center mb-4"></div>
+        <button id="downloadQRBtn" class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">
+          <i class="fas fa-download mr-2"></i> Download QR Code
+        </button>
+        <p class="text-xs mt-3" style="color:var(--text-secondary);">Customers scan this QR to earn loyalty points</p>
+      </div>
+
+      <!-- SECTION 4: BLOCKCHAIN STATUS -->
+      <div class="rounded-2xl p-6 border section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
+        <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);"><i class="fas fa-link text-blue-600 mr-2"></i> Blockchain Status</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between p-2 rounded-lg" style="background-color:var(--bg-secondary);"><span style="color:var(--text-secondary);">Network:</span><span class="text-green-600 font-medium">Base Sepolia ✓</span></div>
+          <div class="flex justify-between p-2 rounded-lg" style="background-color:var(--bg-secondary);"><span style="color:var(--text-secondary);">Gasless:</span><span class="text-green-600 font-medium">UGF Active ✓</span></div>
+          <div class="flex justify-between p-2 rounded-lg" style="background-color:var(--bg-secondary);"><span style="color:var(--text-secondary);">Token:</span><span style="color:var(--text-primary); font-weight:500;">S2E Points (ERC20)</span></div>
+          <div class="flex justify-between p-2 rounded-lg" style="background-color:var(--bg-secondary);"><span style="color:var(--text-secondary);">Transaction Fee:</span><span style="color:var(--text-primary); font-weight:500;">Gasless (Mock USD)</span></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Award Points Modal -->
-  <div id="pointsModal" class="modal">
-    <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);">Award Points</h2>
-      <input type="text"   id="customerAddress" placeholder="Customer Wallet Address" class="w-full mb-3 px-4 py-2 rounded-xl border">
-      <input type="number" id="pointsAmount" value="10" class="w-full mb-4 px-4 py-2 rounded-xl border">
-      <div class="flex gap-3">
-        <button onclick="submitPoints()" class="flex-1 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">Award</button>
-        <button onclick="closeModal()"   class="flex-1 border py-2 rounded-xl transition hover:bg-opacity-10 hover:bg-gray-500" style="border-color:var(--border-color);color:var(--text-primary);">Cancel</button>
-      </div>
+<!-- Modal for Adding New Reward -->
+<div id="addRewardModal" class="modal">
+  <div class="modal-content">
+    <h2 class="text-xl font-bold mb-4" style="color:var(--text-primary);"><i class="fas fa-gift text-purple-600"></i> Add New Reward</h2>
+    <input type="text" id="newRewardName" placeholder="Reward Name (e.g., Free Coffee)" class="w-full mb-3 px-4 py-2 rounded-xl border">
+    <input type="number" id="newRewardPoints" placeholder="Points Required" class="w-full mb-4 px-4 py-2 rounded-xl border">
+    <div class="flex gap-3">
+      <button id="confirmAddRewardBtn" class="flex-1 bg-purple-600 text-white py-2 rounded-xl hover:bg-purple-700">Add Reward</button>
+      <button onclick="closeAddRewardModal()" class="flex-1 border py-2 rounded-xl" style="border-color:var(--border-color);color:var(--text-primary);">Cancel</button>
     </div>
   </div>
+</div>
 
-  <script>
-    // ── Step 1: Read from localStorage IMMEDIATELY (no async wait) ─────────
-    var currentUser = null;
+<script>
+  // Firebase & Global Variables
+  firebase.initializeApp({
+    apiKey: "AIzaSyA1W9R3bLBEf4eAJL9wiNHbmn183IPBtrk",
+    authDomain: "scan2earn-771b6.firebaseapp.com",
+    projectId: "scan2earn-771b6",
+    storageBucket: "scan2earn-771b6.firebasestorage.app",
+    messagingSenderId: "511366033486",
+    appId: "1:511366033486:web:6de6dd63e06088aac8131f"
+  });
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  let currentUser = null;
+  let currentUid = null;
+  let currentRewards = [];
+
+  // Auth & Role Check
+  try { let raw = localStorage.getItem('currentUser'); if (raw) currentUser = JSON.parse(raw); } catch(e) {}
+  const hasShopRole = currentUser && ((currentUser.type === 'shopkeeper') || (currentUser.roles?.shopkeeper));
+  if (!hasShopRole) window.location.href = 'login.html';
+  else { currentUid = currentUser.uid; loadAllData(); }
+
+  auth.onAuthStateChanged(async (user) => { if (user) { currentUid = user.uid; const snap = await db.collection('users').doc(user.uid).get(); if (snap.exists) { currentUser = snap.data(); localStorage.setItem('currentUser', JSON.stringify(currentUser)); loadAllData(); } } });
+
+  // Load all data from Firestore / localStorage
+  async function loadAllData() {
+    if (!currentUid) return;
+    const snap = await db.collection('users').doc(currentUid).get();
+    if (snap.exists) {
+      currentUser = snap.data();
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+    const shopRole = (currentUser.roles?.shopkeeper) || currentUser;
+    const storeName = shopRole.storeName || currentUser.storeName || currentUser.name || 'My Store';
+    const storeDesc = shopRole.storeDesc || currentUser.storeDesc || '';
+    const wallet = currentUser.walletAddress || '0x...';
+    currentRewards = shopRole.rewards || [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
+    
+    // Update Store View
+    document.getElementById('viewStoreName').innerText = storeName;
+    document.getElementById('viewStoreDesc').innerText = storeDesc || 'No description';
+    document.getElementById('viewWalletAddr').innerText = wallet;
+    document.getElementById('editStoreName').value = storeName;
+    document.getElementById('editStoreDesc').value = storeDesc;
+    document.getElementById('editWalletAddr').innerText = wallet;
+    document.getElementById('shopNameDisplay').innerText = storeName;
+    
+    // Render Rewards View Mode
+    renderRewardsView();
+    
+    // Generate QR Code
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = '';
+    const qrData = JSON.stringify({ storeId: currentUid, storeName: storeName, action: 'earn_points', pointsValue: shopRole.pointsPerPurchase || 10 });
+    new QRCode(qrContainer, { text: 'https://scan2earn.app/scan?data=' + encodeURIComponent(qrData), width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    
+    // Load Customers who scanned
+    await loadCustomersList();
+  }
+
+  function renderRewardsView() {
+    const container = document.getElementById('rewardsListContainer');
+    if (!currentRewards.length) { container.innerHTML = '<p class="text-center py-4" style="color:var(--text-secondary);">No rewards configured. Click "Add New Reward".</p>'; return; }
+    container.innerHTML = currentRewards.map((r, idx) => `
+      <div class="reward-item flex justify-between items-center">
+        <div><span class="font-semibold" style="color:var(--text-primary);">${escapeHtml(r.name)}</span><span class="text-sm ml-3" style="color:var(--text-secondary);">${r.points} points</span></div>
+        <span class="badge">Active</span>
+      </div>
+    `).join('');
+  }
+
+  function renderRewardsEdit() {
+    const container = document.getElementById('rewardsEditList');
+    container.innerHTML = currentRewards.map((r, idx) => `
+      <div class="p-3 rounded-xl border" style="border-color:var(--border-color); background-color:var(--bg-secondary);">
+        <div class="flex gap-2 mb-2"><input type="text" class="reward-name-${idx} flex-1 px-3 py-2 rounded-lg border" value="${escapeHtml(r.name)}" placeholder="Reward Name"><input type="number" class="reward-points-${idx} w-32 px-3 py-2 rounded-lg border" value="${r.points}" placeholder="Points"></div>
+        <button onclick="removeReward(${idx})" class="text-red-500 text-sm hover:text-red-700"><i class="fas fa-trash"></i> Remove</button>
+      </div>
+    `).join('');
+  }
+
+  window.removeReward = function(idx) { currentRewards.splice(idx, 1); renderRewardsEdit(); };
+
+  async function saveRewardsToFirebase() {
+    const shopRole = (currentUser.roles?.shopkeeper) ? currentUser.roles.shopkeeper : currentUser;
+    if (currentUser.roles?.shopkeeper) await db.collection('users').doc(currentUid).update({ 'roles.shopkeeper.rewards': currentRewards });
+    else await db.collection('users').doc(currentUid).update({ rewards: currentRewards });
+    if (currentUser.roles?.shopkeeper) currentUser.roles.shopkeeper.rewards = currentRewards;
+    else currentUser.rewards = currentRewards;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    renderRewardsView();
+    document.getElementById('rewardsEditMode').classList.add('hidden');
+    document.getElementById('rewardsViewMode').classList.remove('hidden');
+  }
+
+  async function loadCustomersList() {
+    const tbody = document.getElementById('customersListBody');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">Loading customers...</td></tr>';
     try {
-      var raw = localStorage.getItem('currentUser');
-      if (raw) currentUser = JSON.parse(raw);
-    } catch(e) {}
+      const allUsers = await db.collection('users').get();
+      const customers = [];
+      for (const doc of allUsers.docs) {
+        const data = doc.data();
+        const custRole = (data.roles?.customer) ? data.roles.customer : (data.type === 'customer' ? data : null);
+        if (custRole && (custRole.history || data.history)) {
+          const history = custRole.history || data.history || [];
+          const totalPoints = custRole.totalPoints || data.totalPoints || 0;
+          const lastTx = history.length > 0 ? history[0].date : 'No activity';
+          customers.push({ name: data.name || data.email || 'Customer', wallet: data.walletAddress || doc.id, points: totalPoints, lastActivity: lastTx });
+        }
+      }
+      if (customers.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">No customers have scanned yet.</td></tr>';
+      else {
+        tbody.innerHTML = customers.map(c => `<tr><td style="color:var(--text-primary);">${escapeHtml(c.name)}</td><td class="font-mono text-xs break-all" style="color:var(--text-secondary);">${c.wallet}</td><td style="color:var(--text-primary); font-weight:600;">${c.points}</td><td style="color:var(--text-secondary);">${c.lastActivity}</td></tr>`).join('');
+      }
+    } catch(e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">Error loading customers</td></tr>'; }
+  }
 
-    // ── Step 2: Check if user is a shopkeeper right away ───────────────────
-    var hasShopRole = currentUser &&
-      ((currentUser.type === 'shopkeeper') ||
-       (currentUser.roles && currentUser.roles.shopkeeper));
+  // Store Edit Logic
+  let storeEditMode = false;
+  document.getElementById('editStoreBtn').addEventListener('click', () => {
+    document.getElementById('storeInfoView').classList.add('hidden');
+    document.getElementById('storeInfoEdit').classList.remove('hidden');
+    storeEditMode = true;
+  });
+  document.getElementById('cancelStoreBtn').addEventListener('click', () => {
+    document.getElementById('storeInfoView').classList.remove('hidden');
+    document.getElementById('storeInfoEdit').classList.add('hidden');
+    storeEditMode = false;
+    loadAllData();
+  });
+  document.getElementById('saveStoreBtn').addEventListener('click', async () => {
+    const newName = document.getElementById('editStoreName').value.trim();
+    const newDesc = document.getElementById('editStoreDesc').value.trim();
+    if (!newName) { alert('Store name required'); return; }
+    try {
+      if (currentUser.roles?.shopkeeper) await db.collection('users').doc(currentUid).update({ 'roles.shopkeeper.storeName': newName, 'roles.shopkeeper.storeDesc': newDesc });
+      else await db.collection('users').doc(currentUid).update({ storeName: newName, storeDesc: newDesc });
+      if (currentUser.roles?.shopkeeper) { currentUser.roles.shopkeeper.storeName = newName; currentUser.roles.shopkeeper.storeDesc = newDesc; }
+      else { currentUser.storeName = newName; currentUser.storeDesc = newDesc; }
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      document.getElementById('storeInfoView').classList.remove('hidden');
+      document.getElementById('storeInfoEdit').classList.add('hidden');
+      loadAllData();
+    } catch(e) { alert('Error saving: ' + e.message); }
+  });
 
-    if (!hasShopRole) {
-      window.location.href = 'login.html';
-    } else {
-      // Load dashboard immediately from localStorage data
-      loadDashboard(currentUser);
+  // Reward Edit Mode
+  document.getElementById('editRewardsBtn').addEventListener('click', () => {
+    renderRewardsEdit();
+    document.getElementById('rewardsViewMode').classList.add('hidden');
+    document.getElementById('rewardsEditMode').classList.remove('hidden');
+  });
+  document.getElementById('cancelRewardsBtn').addEventListener('click', () => {
+    document.getElementById('rewardsEditMode').classList.add('hidden');
+    document.getElementById('rewardsViewMode').classList.remove('hidden');
+    loadAllData();
+  });
+  document.getElementById('saveRewardsBtn').addEventListener('click', async () => {
+    const newRewards = [];
+    for (let i = 0; i < currentRewards.length; i++) {
+      const nameInput = document.querySelector(`.reward-name-${i}`);
+      const pointsInput = document.querySelector(`.reward-points-${i}`);
+      if (nameInput && pointsInput) newRewards.push({ name: nameInput.value.trim(), points: parseInt(pointsInput.value) || 0 });
     }
+    currentRewards = newRewards.filter(r => r.name && r.points > 0);
+    await saveRewardsToFirebase();
+  });
 
-    // ── Step 3: Firebase init (for save/award operations only) ─────────────
-    firebase.initializeApp({
-      apiKey: "AIzaSyA1W9R3bLBEf4eAJL9wiNHbmn183IPBtrk",
-      authDomain: "scan2earn-771b6.firebaseapp.com",
-      projectId: "scan2earn-771b6",
-      storageBucket: "scan2earn-771b6.firebasestorage.app",
-      messagingSenderId: "511366033486",
-      appId: "1:511366033486:web:6de6dd63e06088aac8131f"
+  // Add New Reward Modal
+  const addModal = document.getElementById('addRewardModal');
+  window.openAddRewardModal = () => { addModal.classList.add('active'); };
+  window.closeAddRewardModal = () => { addModal.classList.remove('active'); document.getElementById('newRewardName').value = ''; document.getElementById('newRewardPoints').value = ''; };
+  document.getElementById('addRewardBtn').addEventListener('click', openAddRewardModal);
+  document.getElementById('confirmAddRewardBtn').addEventListener('click', async () => {
+    const name = document.getElementById('newRewardName').value.trim();
+    const points = parseInt(document.getElementById('newRewardPoints').value);
+    if (!name || !points) { alert('Please enter reward name and points'); return; }
+    currentRewards.push({ name, points });
+    closeAddRewardModal();
+    await saveRewardsToFirebase();
+  });
+
+  // Download QR
+  document.getElementById('downloadQRBtn').addEventListener('click', () => {
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) { alert('QR code not ready'); return; }
+    const a = document.createElement('a'); a.download = 'store-qr.png'; a.href = canvas.toDataURL(); a.click();
+  });
+
+  // Logout
+  window.doLogout = () => { auth.signOut().then(() => { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }); };
+
+  // Dark Mode
+  (function() {
+    const toggle = document.getElementById('darkModeToggle'), icon = document.getElementById('darkModeIcon');
+    const isDark = localStorage.getItem('darkMode') === 'true';
+    if (isDark) { document.documentElement.classList.add('dark'); icon.classList.replace('fa-moon', 'fa-sun'); }
+    toggle.addEventListener('click', () => {
+      const dark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', dark);
+      icon.className = 'fas ' + (dark ? 'fa-sun' : 'fa-moon');
+      setTimeout(() => { const qrDiv = document.getElementById('qrcode'); if(qrDiv && currentUid) loadAllData(); }, 50);
     });
-    var auth = firebase.auth();
-    var db   = firebase.firestore();
-    var currentUid = currentUser ? currentUser.uid : null;
+  })();
 
-    // ── Step 4: Silently refresh from Firestore in background ──────────────
-    auth.onAuthStateChanged(async function(user) {
-      if (!user) return; // don't redirect — localStorage already verified
-      currentUid = user.uid;
-      try {
-        var snap = await db.collection('users').doc(user.uid).get();
-        if (snap.exists) {
-          currentUser = snap.data();
-          localStorage.setItem('currentUser', JSON.stringify(currentUser));
-          loadDashboard(currentUser); // refresh with latest Firestore data
-        }
-      } catch(e) {}
-    });
-
-    // ── Load dashboard UI ──────────────────────────────────────────────────
-    function loadDashboard(data) {
-      var shopRole  = (data.roles && data.roles.shopkeeper) ? data.roles.shopkeeper : data;
-      var storeName = shopRole.storeName  || data.storeName  || data.name  || '';
-      var storeDesc = shopRole.storeDesc  || data.storeDesc  || '';
-      var pointsPer = shopRole.pointsPerPurchase || data.pointsPerPurchase || 10;
-      var rewards   = shopRole.rewards    || data.rewards    ||
-                      [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
-
-      document.getElementById('shopNameDisplay').innerText  = storeName;
-      document.getElementById('storeName').value            = storeName;
-      document.getElementById('storeDesc').value            = storeDesc;
-      document.getElementById('walletAddress').innerText    = data.walletAddress || '0x...';
-      document.getElementById('pointsPerPurchase').value    = pointsPer;
-      document.getElementById('reward1Name').value          = rewards[0]?.name   || 'Free Coffee';
-      document.getElementById('reward1Points').value        = rewards[0]?.points || 100;
-      document.getElementById('reward2Name').value          = rewards[1]?.name   || 'Free Dessert';
-      document.getElementById('reward2Points').value        = rewards[1]?.points || 250;
-
-      // QR Code - regenerate with fresh data
-      var qrContainer = document.getElementById('qrcode');
-      qrContainer.innerHTML = '';
-      var qrData = JSON.stringify({ storeId: data.uid, storeName: storeName, action: 'earn_points', pointsValue: pointsPer });
-      var qrUrl = 'https://scan2earn.app/scan?data=' + encodeURIComponent(qrData);
-      try {
-        new QRCode(qrContainer, {
-          text: qrUrl,
-          width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H
-        });
-      } catch(e) {
-        console.warn("QR generation error", e);
-        qrContainer.innerHTML = '<div class="p-4 bg-gray-100 rounded">QR Code Generator Ready</div>';
-      }
-    }
-
-    // ── Save settings ──────────────────────────────────────────────────────
-    async function saveStoreSettings() {
-      if (!currentUid) { alert('Not logged in'); return; }
-      var storeName = document.getElementById('storeName').value.trim();
-      var storeDesc = document.getElementById('storeDesc').value.trim();
-      var pointsPer = parseInt(document.getElementById('pointsPerPurchase').value) || 10;
-      var rewards   = [
-        { name: document.getElementById('reward1Name').value,   points: parseInt(document.getElementById('reward1Points').value)   || 100 },
-        { name: document.getElementById('reward2Name').value,   points: parseInt(document.getElementById('reward2Points').value)   || 250 }
-      ];
-      try {
-        var snap = await db.collection('users').doc(currentUid).get();
-        var data = snap.data();
-        if (data.roles && data.roles.shopkeeper) {
-          await db.collection('users').doc(currentUid).update({
-            'roles.shopkeeper.storeName': storeName,
-            'roles.shopkeeper.storeDesc': storeDesc,
-            'roles.shopkeeper.pointsPerPurchase': pointsPer,
-            'roles.shopkeeper.rewards': rewards
-          });
-          if (currentUser.roles && currentUser.roles.shopkeeper) {
-            currentUser.roles.shopkeeper.storeName = storeName;
-            currentUser.roles.shopkeeper.storeDesc = storeDesc;
-            currentUser.roles.shopkeeper.pointsPerPurchase = pointsPer;
-            currentUser.roles.shopkeeper.rewards = rewards;
-          }
-        } else {
-          await db.collection('users').doc(currentUid).update({ storeName, storeDesc, pointsPerPurchase: pointsPer, rewards });
-          currentUser.storeName = storeName;
-          currentUser.storeDesc = storeDesc;
-          currentUser.pointsPerPurchase = pointsPer;
-          currentUser.rewards = rewards;
-        }
-        document.getElementById('shopNameDisplay').innerText = storeName;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        // Regenerate QR with new points value
-        var qrContainer = document.getElementById('qrcode');
-        qrContainer.innerHTML = '';
-        var qrData = JSON.stringify({ storeId: currentUid, storeName: storeName, action: 'earn_points', pointsValue: pointsPer });
-        var qrUrl = 'https://scan2earn.app/scan?data=' + encodeURIComponent(qrData);
-        new QRCode(qrContainer, {
-          text: qrUrl,
-          width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H
-        });
-        alert('✅ Settings saved!');
-      } catch(e) { alert('Error: ' + e.message); }
-    }
-
-    function copyWallet() {
-      var walletText = document.getElementById('walletAddress').innerText;
-      if (walletText && walletText !== 'Loading...') {
-        navigator.clipboard.writeText(walletText)
-          .then(function() { alert('Wallet address copied!'); })
-          .catch(function() { alert('Could not copy'); });
-      } else {
-        alert('No wallet address available');
-      }
-    }
-
-    function openAwardModal() { document.getElementById('pointsModal').classList.add('active'); }
-    function closeModal()     { document.getElementById('pointsModal').classList.remove('active'); }
-
-    async function submitPoints() {
-      var addr   = document.getElementById('customerAddress').value.trim();
-      var points = parseInt(document.getElementById('pointsAmount').value) || 0;
-      if (!addr || !points) { alert('Enter wallet address and points'); return; }
-      try {
-        var snap = await db.collection('users').where('walletAddress', '==', addr).get();
-        if (snap.empty) { alert('Customer not found'); return; }
-        var custDoc = snap.docs[0]; var custData = custDoc.data();
-        var shopName = (currentUser.roles?.shopkeeper?.storeName) || currentUser.storeName || 'Store';
-        if (custData.roles && custData.roles.customer) {
-          var h = custData.roles.customer.history || [];
-          h.unshift({ action: 'Earned ' + points + ' points from ' + shopName, date: new Date().toLocaleString(), points: points });
-          await db.collection('users').doc(custDoc.id).update({ 
-            'roles.customer.totalPoints': (custData.roles.customer.totalPoints || 0) + points, 
-            'roles.customer.history': h 
-          });
-        } else {
-          var h2 = custData.history || [];
-          h2.unshift({ action: 'Earned ' + points + ' points from ' + shopName, date: new Date().toLocaleString(), points: points });
-          await db.collection('users').doc(custDoc.id).update({ 
-            totalPoints: (custData.totalPoints || 0) + points, 
-            history: h2 
-          });
-        }
-        alert('✅ ' + points + ' points awarded!');
-        closeModal();
-        document.getElementById('customerAddress').value = '';
-        document.getElementById('pointsAmount').value = '10';
-      } catch(e) { alert('Error: ' + e.message); }
-    }
-
-    function downloadQR() {
-      var qrContainer = document.getElementById('qrcode');
-      var canvas = qrContainer.querySelector('canvas');
-      if (!canvas) {
-        alert('QR code not ready yet. Please wait or try again.');
-        return;
-      }
-      var a = document.createElement('a');
-      a.download = 'store-qr.png';
-      a.href = canvas.toDataURL();
-      a.click();
-    }
-
-    function doLogout() {
-      auth.signOut().then(function() {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-      }).catch(function() {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-      });
-    }
-
-    // ── DARK MODE FIXED ────────────────────────────────────────────────────
-    // This ensures the dark mode toggle works perfectly
-    (function initDarkMode() {
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      const darkModeIcon = document.getElementById('darkModeIcon');
-      
-      // Get initial dark mode state from localStorage
-      const isDarkMode = localStorage.getItem('darkMode') === 'true';
-      
-      // Apply initial theme
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        darkModeIcon.classList.remove('fa-moon');
-        darkModeIcon.classList.add('fa-sun');
-      } else {
-        document.documentElement.classList.remove('dark');
-        darkModeIcon.classList.remove('fa-sun');
-        darkModeIcon.classList.add('fa-moon');
-      }
-      
-      // Toggle function
-      function toggleDarkMode() {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('darkMode', isDark ? 'true' : 'false');
-        
-        // Update icon
-        if (isDark) {
-          darkModeIcon.classList.remove('fa-moon');
-          darkModeIcon.classList.add('fa-sun');
-        } else {
-          darkModeIcon.classList.remove('fa-sun');
-          darkModeIcon.classList.add('fa-moon');
-        }
-        
-        // Force QR code to refresh if present (to maintain visibility)
-        const qrContainer = document.getElementById('qrcode');
-        if (qrContainer && qrContainer.hasChildNodes()) {
-          // Small delay to let CSS transition complete
-          setTimeout(() => {
-            // Re-generate QR code to ensure proper colors in dark mode
-            var storeName = document.getElementById('storeName').value.trim() || 'Store';
-            var pointsPer = parseInt(document.getElementById('pointsPerPurchase').value) || 10;
-            qrContainer.innerHTML = '';
-            var qrData = JSON.stringify({ storeId: currentUid, storeName: storeName, action: 'earn_points', pointsValue: pointsPer });
-            var qrUrl = 'https://scan2earn.app/scan?data=' + encodeURIComponent(qrData);
-            try {
-              new QRCode(qrContainer, {
-                text: qrUrl,
-                width: 200, height: 200, colorDark: '#000000', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-              });
-            } catch(e) {}
-          }, 50);
-        }
-      }
-      
-      // Add click event listener
-      if (darkModeToggle) {
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-      }
-    })();
-  </script>
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m; }); }
+</script>
 </body>
 </html>
