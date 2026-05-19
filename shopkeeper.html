@@ -105,7 +105,7 @@
         </div>
       </div>
 
-      <!-- SECTION 2: REWARD RULES (View/Edit + Add New) -->
+      <!-- SECTION 2: REWARD RULES (View/Edit + Add New) - SORTED ASCENDING BY POINTS -->
       <div class="rounded-2xl p-6 border section-card" style="background-color:var(--card-bg);border-color:var(--border-color);">
         <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
           <h2 class="text-xl font-bold" style="color:var(--text-primary);"><i class="fas fa-tag text-purple-600 mr-2"></i> Reward Rules</h2>
@@ -119,12 +119,12 @@
           </div>
         </div>
         
-        <!-- View Mode for Rewards -->
+        <!-- View Mode for Rewards (Sorted by points ascending) -->
         <div id="rewardsViewMode">
           <div id="rewardsListContainer" class="space-y-2"></div>
         </div>
         
-        <!-- Edit Mode for Rewards -->
+        <!-- Edit Mode for Rewards (Also sorted) -->
         <div id="rewardsEditMode" class="hidden">
           <div id="rewardsEditList" class="space-y-3 mb-4"></div>
           <div class="flex gap-3 pt-2">
@@ -145,7 +145,7 @@
             <tbody id="customersListBody">
               <tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">Loading customers...</td></tr>
             </tbody>
-           </table>
+          </table>
         </div>
       </div>
     </div>
@@ -206,6 +206,12 @@
   let currentUid = null;
   let currentRewards = [];
 
+  // Helper function to sort rewards by points (ascending)
+  function sortRewardsByPoints(rewards) {
+    if (!rewards || !rewards.length) return [];
+    return [...rewards].sort((a, b) => (a.points || 0) - (b.points || 0));
+  }
+
   // Auth & Role Check
   try { let raw = localStorage.getItem('currentUser'); if (raw) currentUser = JSON.parse(raw); } catch(e) {}
   const hasShopRole = currentUser && ((currentUser.type === 'shopkeeper') || (currentUser.roles?.shopkeeper));
@@ -226,7 +232,9 @@
     const storeName = shopRole.storeName || currentUser.storeName || currentUser.name || 'My Store';
     const storeDesc = shopRole.storeDesc || currentUser.storeDesc || '';
     const wallet = currentUser.walletAddress || '0x...';
-    currentRewards = shopRole.rewards || [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
+    let rawRewards = shopRole.rewards || [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
+    // Sort rewards by points ascending
+    currentRewards = sortRewardsByPoints(rawRewards);
     
     // Update Store View
     document.getElementById('viewStoreName').innerText = storeName;
@@ -237,7 +245,7 @@
     document.getElementById('editWalletAddr').innerText = wallet;
     document.getElementById('shopNameDisplay').innerText = storeName;
     
-    // Render Rewards View Mode
+    // Render Rewards View Mode (sorted)
     renderRewardsView();
     
     // Generate QR Code
@@ -252,8 +260,10 @@
 
   function renderRewardsView() {
     const container = document.getElementById('rewardsListContainer');
-    if (!currentRewards.length) { container.innerHTML = '<p class="text-center py-4" style="color:var(--text-secondary);">No rewards configured. Click "Add New Reward".</p>'; return; }
-    container.innerHTML = currentRewards.map((r, idx) => `
+    // Ensure rewards are sorted before rendering
+    const sortedRewards = sortRewardsByPoints(currentRewards);
+    if (!sortedRewards.length) { container.innerHTML = '<p class="text-center py-4" style="color:var(--text-secondary);">No rewards configured. Click "Add New Reward".</p>'; return; }
+    container.innerHTML = sortedRewards.map((r, idx) => `
       <div class="reward-item flex justify-between items-center">
         <div><span class="font-semibold" style="color:var(--text-primary);">${escapeHtml(r.name)}</span><span class="text-sm ml-3" style="color:var(--text-secondary);">${r.points} points</span></div>
         <span class="badge">Active</span>
@@ -263,22 +273,37 @@
 
   function renderRewardsEdit() {
     const container = document.getElementById('rewardsEditList');
-    container.innerHTML = currentRewards.map((r, idx) => `
+    // Sort rewards for edit mode as well
+    const sortedRewards = sortRewardsByPoints(currentRewards);
+    container.innerHTML = sortedRewards.map((r, idx) => `
       <div class="p-3 rounded-xl border" style="border-color:var(--border-color); background-color:var(--bg-secondary);">
         <div class="flex gap-2 mb-2"><input type="text" class="reward-name-${idx} flex-1 px-3 py-2 rounded-lg border" value="${escapeHtml(r.name)}" placeholder="Reward Name"><input type="number" class="reward-points-${idx} w-32 px-3 py-2 rounded-lg border" value="${r.points}" placeholder="Points"></div>
         <button onclick="removeReward(${idx})" class="text-red-500 text-sm hover:text-red-700"><i class="fas fa-trash"></i> Remove</button>
       </div>
     `).join('');
+    // Store sorted rewards back to currentRewards to maintain order
+    currentRewards = sortedRewards;
   }
 
-  window.removeReward = function(idx) { currentRewards.splice(idx, 1); renderRewardsEdit(); };
+  window.removeReward = function(idx) { 
+    currentRewards.splice(idx, 1); 
+    // Re-sort after removal
+    currentRewards = sortRewardsByPoints(currentRewards);
+    renderRewardsEdit(); 
+  };
 
   async function saveRewardsToFirebase() {
-    const shopRole = (currentUser.roles?.shopkeeper) ? currentUser.roles.shopkeeper : currentUser;
-    if (currentUser.roles?.shopkeeper) await db.collection('users').doc(currentUid).update({ 'roles.shopkeeper.rewards': currentRewards });
-    else await db.collection('users').doc(currentUid).update({ rewards: currentRewards });
-    if (currentUser.roles?.shopkeeper) currentUser.roles.shopkeeper.rewards = currentRewards;
-    else currentUser.rewards = currentRewards;
+    // Ensure rewards are sorted before saving
+    const sortedRewards = sortRewardsByPoints(currentRewards);
+    currentRewards = sortedRewards;
+    
+    if (currentUser.roles?.shopkeeper) {
+      await db.collection('users').doc(currentUid).update({ 'roles.shopkeeper.rewards': currentRewards });
+      if (currentUser.roles.shopkeeper) currentUser.roles.shopkeeper.rewards = currentRewards;
+    } else {
+      await db.collection('users').doc(currentUid).update({ rewards: currentRewards });
+      currentUser.rewards = currentRewards;
+    }
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     renderRewardsView();
     document.getElementById('rewardsEditMode').classList.add('hidden');
@@ -309,16 +334,13 @@
   }
 
   // Store Edit Logic
-  let storeEditMode = false;
   document.getElementById('editStoreBtn').addEventListener('click', () => {
     document.getElementById('storeInfoView').classList.add('hidden');
     document.getElementById('storeInfoEdit').classList.remove('hidden');
-    storeEditMode = true;
   });
   document.getElementById('cancelStoreBtn').addEventListener('click', () => {
     document.getElementById('storeInfoView').classList.remove('hidden');
     document.getElementById('storeInfoEdit').classList.add('hidden');
-    storeEditMode = false;
     loadAllData();
   });
   document.getElementById('saveStoreBtn').addEventListener('click', async () => {
@@ -356,6 +378,8 @@
       if (nameInput && pointsInput) newRewards.push({ name: nameInput.value.trim(), points: parseInt(pointsInput.value) || 0 });
     }
     currentRewards = newRewards.filter(r => r.name && r.points > 0);
+    // Sort before saving
+    currentRewards = sortRewardsByPoints(currentRewards);
     await saveRewardsToFirebase();
   });
 
@@ -369,6 +393,8 @@
     const points = parseInt(document.getElementById('newRewardPoints').value);
     if (!name || !points) { alert('Please enter reward name and points'); return; }
     currentRewards.push({ name, points });
+    // Sort after adding new reward
+    currentRewards = sortRewardsByPoints(currentRewards);
     closeAddRewardModal();
     await saveRewardsToFirebase();
   });
