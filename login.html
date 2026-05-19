@@ -190,7 +190,7 @@
       </div>
 
       <div style="display:flex;gap:1rem; margin-top: 2rem;">
-        <button class="role-btn active" id="btnShop">🏪 Shopkeeper</button>
+        <button class="role-btn" id="btnShop">🏪 Shopkeeper</button>
         <button class="role-btn" id="btnCust">👤 Customer</button>
       </div>
 
@@ -228,8 +228,10 @@
     
     const auth = firebase.auth();
     const db = firebase.firestore();
-    let selectedType = 'shopkeeper';
-
+    
+    // Get selected role from localStorage (set by index.html)
+    let selectedType = localStorage.getItem('selectedRole') || 'shopkeeper';
+    
     function showToast(msg, isError = true) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
@@ -330,18 +332,32 @@
       dmIcon.className = 'fas ' + (dark ? 'fa-sun' : 'fa-moon');
     });
 
-    // Role Toggle
-    document.getElementById('btnShop').addEventListener('click', () => {
+    // Role Toggle - Update UI based on selectedType from localStorage
+    const btnShop = document.getElementById('btnShop');
+    const btnCust = document.getElementById('btnCust');
+    
+    function updateRoleUI() {
+      if (selectedType === 'shopkeeper') {
+        btnShop.classList.add('active');
+        btnCust.classList.remove('active');
+      } else {
+        btnCust.classList.add('active');
+        btnShop.classList.remove('active');
+      }
+    }
+    
+    btnShop.addEventListener('click', () => {
       selectedType = 'shopkeeper';
-      document.getElementById('btnShop').classList.add('active');
-      document.getElementById('btnCust').classList.remove('active');
+      updateRoleUI();
     });
     
-    document.getElementById('btnCust').addEventListener('click', () => {
+    btnCust.addEventListener('click', () => {
       selectedType = 'customer';
-      document.getElementById('btnCust').classList.add('active');
-      document.getElementById('btnShop').classList.remove('active');
+      updateRoleUI();
     });
+    
+    // Apply the selected role from localStorage to UI on page load
+    updateRoleUI();
 
     // ============ GOOGLE SIGN IN ============
     document.getElementById('btnGoogle').addEventListener('click', async function() {
@@ -363,19 +379,14 @@
         if (userDoc.exists) {
           console.log("User exists in Firestore");
           const userData = userDoc.data();
-          console.log("User data:", userData);
-          console.log("User roles:", userData.roles);
-          console.log("Has selected role?", userData.roles && userData.roles[selectedType]);
           
           // Check if user has the selected role
           if (userData.roles && userData.roles[selectedType]) {
-            console.log("User has role, redirecting to", selectedType);
             localStorage.setItem('currentUser', JSON.stringify(userData));
             showToast(`Welcome back, ${userData.name}!`, false);
             setTimeout(() => redirect(selectedType), 500);
             return;
           } else {
-            console.log("User doesn't have role, adding it");
             // User exists but doesn't have this role - add it
             let storeName = null;
             if (selectedType === 'shopkeeper') {
@@ -398,7 +409,6 @@
             return;
           }
         } else {
-          console.log("New user, creating in Firestore");
           // Brand new user - create in Firestore
           let storeName = null;
           if (selectedType === 'shopkeeper') {
@@ -412,7 +422,6 @@
           }
           
           const userData = await createUserInFirestore(user, selectedType, storeName);
-          console.log("Created user data:", userData);
           localStorage.setItem('currentUser', JSON.stringify(userData));
           showToast(`Welcome to Scan2Earn, ${userData.name}!`, false);
           setTimeout(() => redirect(selectedType), 500);

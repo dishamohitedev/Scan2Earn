@@ -90,7 +90,7 @@
         <button id="darkModeToggle" class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style="background-color: var(--bg-secondary);">
           <i id="darkModeIcon" class="fas fa-moon" style="color: var(--text-primary);"></i>
         </button>
-        <a href="login.html" class="bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition flex items-center gap-2" style="text-decoration: none;">
+        <a href="login.html" id="shopkeeperLoginBtn" class="bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-800 transition flex items-center gap-2" style="text-decoration: none;">
           <i class="fas fa-wallet"></i> Launch dApp
         </a>
       </div>
@@ -124,10 +124,10 @@
           </p>
           
           <div class="flex flex-wrap gap-4 mt-8">
-            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
+            <a href="login.html" id="shopkeeperBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
               <i class="fas fa-store"></i> I'm a shopkeeper
             </a>
-            <a href="login.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
+            <a href="login.html" id="customerBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition flex items-center gap-2 btn-glow" style="text-decoration: none;">
               <i class="fas fa-user"></i> I'm a customer
             </a>
           </div>
@@ -186,6 +186,20 @@
   </footer>
 
   <script>
+    // Store selected role in localStorage when clicking buttons
+    document.getElementById('shopkeeperBtn').addEventListener('click', function(e) {
+      localStorage.setItem('selectedRole', 'shopkeeper');
+    });
+    
+    document.getElementById('customerBtn').addEventListener('click', function(e) {
+      localStorage.setItem('selectedRole', 'customer');
+    });
+    
+    // For the top navigation "Launch dApp" button - default to shopkeeper
+    document.getElementById('shopkeeperLoginBtn').addEventListener('click', function(e) {
+      localStorage.setItem('selectedRole', 'shopkeeper');
+    });
+    
     (function() {
       const toggleBtn = document.getElementById('darkModeToggle');
       const icon = document.getElementById('darkModeIcon');
