@@ -239,7 +239,7 @@
     }
 
     function redirect(type) { 
-      window.location.href = type === 'shopkeeper' ? 'shopkeeper.html' : 'customer.html'; 
+      window.location.replace(type === 'shopkeeper' ? 'shopkeeper.html' : 'customer.html');
     }
 
     function buildRoleData(type, storeName) {
@@ -250,7 +250,9 @@
             { name: 'Free Coffee', points: 100 }, 
             { name: 'Free Dessert', points: 250 }
           ], 
-          pointsPerPurchase: 10 
+          pointsPerPurchase: 10,
+          totalPoints: 0,
+          customers: []
         };
       }
       return { totalPoints: 0, history: [] };
@@ -353,20 +355,27 @@
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         
+        console.log("User signed in:", user.uid, user.email, "Selected type:", selectedType);
+        
         // Check if user exists in Firestore
         const userDoc = await db.collection('users').doc(user.uid).get();
         
         if (userDoc.exists) {
-          // Existing user - just login
+          console.log("User exists in Firestore");
           const userData = userDoc.data();
+          console.log("User data:", userData);
+          console.log("User roles:", userData.roles);
+          console.log("Has selected role?", userData.roles && userData.roles[selectedType]);
           
           // Check if user has the selected role
           if (userData.roles && userData.roles[selectedType]) {
+            console.log("User has role, redirecting to", selectedType);
             localStorage.setItem('currentUser', JSON.stringify(userData));
             showToast(`Welcome back, ${userData.name}!`, false);
-            setTimeout(() => redirect(selectedType), 1000);
+            setTimeout(() => redirect(selectedType), 500);
             return;
           } else {
+            console.log("User doesn't have role, adding it");
             // User exists but doesn't have this role - add it
             let storeName = null;
             if (selectedType === 'shopkeeper') {
@@ -385,10 +394,11 @@
             const updated = await db.collection('users').doc(user.uid).get();
             localStorage.setItem('currentUser', JSON.stringify(updated.data()));
             showToast(`Welcome to ${selectedType === 'shopkeeper' ? 'Shopkeeper' : 'Customer'} mode!`, false);
-            setTimeout(() => redirect(selectedType), 1000);
+            setTimeout(() => redirect(selectedType), 500);
             return;
           }
         } else {
+          console.log("New user, creating in Firestore");
           // Brand new user - create in Firestore
           let storeName = null;
           if (selectedType === 'shopkeeper') {
@@ -402,9 +412,10 @@
           }
           
           const userData = await createUserInFirestore(user, selectedType, storeName);
+          console.log("Created user data:", userData);
           localStorage.setItem('currentUser', JSON.stringify(userData));
           showToast(`Welcome to Scan2Earn, ${userData.name}!`, false);
-          setTimeout(() => redirect(selectedType), 1000);
+          setTimeout(() => redirect(selectedType), 500);
           return;
         }
         
@@ -414,16 +425,6 @@
         this.classList.remove('btn-loading');
         this.innerHTML = 'Continue with Google';
       }
-    });
-
-    // ============ NO AUTO REDIRECT ============
-    // We are NOT adding onAuthStateChanged redirect so users stay on login page
-    // This allows them to choose their role each time
-    
-    // Clear any existing session data on page load to prevent auto-redirect
-    window.addEventListener('load', () => {
-      // Don't auto redirect - let user choose
-      console.log('Login page ready - waiting for user action');
     });
   </script>
 </body>
