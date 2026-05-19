@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Scan2Earn | Web3 Loyalty Rewards for Local Shops</title>
+  <!-- Favicon - Same for all pages -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233B82F6'/%3E%3Cpath d='M30 35 L70 35 L70 65 L30 65 Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='35' cy='50' r='5' fill='white'/%3E%3Ccircle cx='65' cy='50' r='5' fill='white'/%3E%3Cpath d='M45 70 L55 70' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233B82F6'/%3E%3Cpath d='M30 35 L70 35 L70 65 L30 65 Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='35' cy='50' r='5' fill='white'/%3E%3Ccircle cx='65' cy='50' r='5' fill='white'/%3E%3Cpath d='M45 70 L55 70' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -186,7 +189,6 @@
   </footer>
 
   <script>
-    // Store selected role in localStorage when clicking buttons
     document.getElementById('shopkeeperBtn').addEventListener('click', function(e) {
       localStorage.setItem('selectedRole', 'shopkeeper');
     });
@@ -195,7 +197,6 @@
       localStorage.setItem('selectedRole', 'customer');
     });
     
-    // For the top navigation "Launch dApp" button - default to shopkeeper
     document.getElementById('shopkeeperLoginBtn').addEventListener('click', function(e) {
       localStorage.setItem('selectedRole', 'shopkeeper');
     });

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan2Earn | Login</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233B82F6'/%3E%3Cpath d='M30 35 L70 35 L70 65 L30 65 Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='35' cy='50' r='5' fill='white'/%3E%3Ccircle cx='65' cy='50' r='5' fill='white'/%3E%3Cpath d='M45 70 L55 70' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233B82F6'/%3E%3Cpath d='M30 35 L70 35 L70 65 L30 65 Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='35' cy='50' r='5' fill='white'/%3E%3Ccircle cx='65' cy='50' r='5' fill='white'/%3E%3Cpath d='M45 70 L55 70' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -214,7 +217,6 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyA1W9R3bLBEf4eAJL9wiNHbmn183IPBtrk",
       authDomain: "scan2earn-771b6.firebaseapp.com",
@@ -229,7 +231,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
     
-    // Get selected role from localStorage (set by index.html)
     let selectedType = localStorage.getItem('selectedRole') || 'shopkeeper';
     
     function showToast(msg, isError = true) {
@@ -332,7 +333,7 @@
       dmIcon.className = 'fas ' + (dark ? 'fa-sun' : 'fa-moon');
     });
 
-    // Role Toggle - Update UI based on selectedType from localStorage
+    // Role Toggle
     const btnShop = document.getElementById('btnShop');
     const btnCust = document.getElementById('btnCust');
     
@@ -356,10 +357,9 @@
       updateRoleUI();
     });
     
-    // Apply the selected role from localStorage to UI on page load
     updateRoleUI();
 
-    // ============ GOOGLE SIGN IN ============
+    // Google Sign In
     document.getElementById('btnGoogle').addEventListener('click', async function() {
       if (this.classList.contains('btn-loading')) return;
       
@@ -371,23 +371,16 @@
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         
-        console.log("User signed in:", user.uid, user.email, "Selected type:", selectedType);
-        
-        // Check if user exists in Firestore
         const userDoc = await db.collection('users').doc(user.uid).get();
         
         if (userDoc.exists) {
-          console.log("User exists in Firestore");
           const userData = userDoc.data();
-          
-          // Check if user has the selected role
           if (userData.roles && userData.roles[selectedType]) {
             localStorage.setItem('currentUser', JSON.stringify(userData));
             showToast(`Welcome back, ${userData.name}!`, false);
             setTimeout(() => redirect(selectedType), 500);
             return;
           } else {
-            // User exists but doesn't have this role - add it
             let storeName = null;
             if (selectedType === 'shopkeeper') {
               storeName = await askStoreName();
@@ -409,7 +402,6 @@
             return;
           }
         } else {
-          // Brand new user - create in Firestore
           let storeName = null;
           if (selectedType === 'shopkeeper') {
             storeName = await askStoreName();
