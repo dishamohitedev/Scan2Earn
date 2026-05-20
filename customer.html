@@ -248,7 +248,7 @@
             </div>
             <div>
               <label class="detail-label block mb-1">Phone</label>
-              <input type="text" id="edit-phone" class="edit-field" placeholder="e.g. +91 98765 43210">
+              <input type="tel" id="edit-phone" class="edit-field" placeholder="10-digit phone number" maxlength="10" pattern="[0-9]{10}" inputmode="numeric">
             </div>
           </div>
           <div class="space-y-3">
@@ -474,6 +474,7 @@
     var newName  = document.getElementById('edit-name').value.trim();
     var newPhone = document.getElementById('edit-phone').value.trim();
     if (!newName) { showToast('Name cannot be empty.', 'error'); return; }
+    if (newPhone && !/^[0-9]{10}$/.test(newPhone)) { showToast('Phone number must be exactly 10 digits.', 'error'); return; }
     try {
       if (currentUid) {
         await db.collection('users').doc(currentUid).update({ name: newName, phone: newPhone });
