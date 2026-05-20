@@ -225,22 +225,50 @@
   if (!hasShopRole) window.location.href = 'login.html';
   else { currentUid = currentUser.uid; loadAllData(); }
 
-  auth.onAuthStateChanged(async (user) => { if (user) { currentUid = user.uid; const snap = await db.collection('users').doc(user.uid).get(); if (snap.exists) { currentUser = snap.data(); localStorage.setItem('currentUser', JSON.stringify(currentUser)); loadAllData(); } } });
+  // ── Real-time listener for own shopkeeper doc ──────────────────────────
+  var unsubscribeShopDoc = null;
+  var unsubscribeCustomers = null;
 
+  auth.onAuthStateChanged((user) => {
+    if (!user) return;
+    currentUid = user.uid;
+
+    // Live listener on own document (store info, rewards, etc.)
+    if (unsubscribeShopDoc) unsubscribeShopDoc();
+    unsubscribeShopDoc = db.collection('users').doc(user.uid).onSnapshot((snap) => {
+      if (snap.exists) {
+        currentUser = snap.data();
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        refreshShopUI();
+      }
+    });
+
+    // Live listener on ALL users (customer list auto-updates)
+    startCustomersListener();
+  });
+
+  // Called on initial load (before onSnapshot fires) and after manual saves
   async function loadAllData() {
     if (!currentUid) return;
     const snap = await db.collection('users').doc(currentUid).get();
     if (snap.exists) {
       currentUser = snap.data();
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      refreshShopUI();
     }
+    startCustomersListener();
+  }
+
+  // Pure UI refresh from currentUser — called by both loadAllData and onSnapshot
+  function refreshShopUI() {
+    if (!currentUser) return;
     const shopRole = (currentUser.roles?.shopkeeper) || currentUser;
     const storeName = shopRole.storeName || currentUser.storeName || currentUser.name || 'My Store';
     const storeDesc = shopRole.storeDesc || currentUser.storeDesc || '';
     const wallet = currentUser.walletAddress || '0x...';
     let rawRewards = shopRole.rewards || [{ name: 'Free Coffee', points: 100 }, { name: 'Free Dessert', points: 250 }];
     currentRewards = sortRewardsByPoints(rawRewards);
-    
+
     document.getElementById('viewStoreName').innerText = storeName;
     document.getElementById('viewStoreDesc').innerText = storeDesc || 'No description';
     document.getElementById('viewWalletAddr').innerText = wallet;
@@ -248,10 +276,9 @@
     document.getElementById('editStoreDesc').value = storeDesc;
     document.getElementById('editWalletAddr').innerText = wallet;
     document.getElementById('shopNameDisplay').innerText = storeName;
-    
+
     renderRewardsView();
     generateQRCode(storeName);
-    loadCustomersList();
   }
 
   // Separate function to generate QR code
@@ -322,28 +349,42 @@
     document.getElementById('rewardsViewMode').classList.remove('hidden');
   }
 
-  async function loadCustomersList() {
+  // Real-time customer list — auto-updates whenever any user doc changes
+  function startCustomersListener() {
+    if (unsubscribeCustomers) return; // already listening
     const tbody = document.getElementById('customersListBody');
-    try {
-      const allUsers = await db.collection('users').get();
+    unsubscribeCustomers = db.collection('users').onSnapshot((snapshot) => {
       const customers = [];
-      for (const doc of allUsers.docs) {
+      snapshot.forEach((doc) => {
         const data = doc.data();
         const custRole = (data.roles?.customer) ? data.roles.customer : (data.type === 'customer' ? data : null);
-        if (custRole && (custRole.history || data.history)) {
+        if (custRole) {
           const history = custRole.history || data.history || [];
           const totalPoints = custRole.totalPoints || data.totalPoints || 0;
           const lastTx = history.length > 0 ? history[0].date : 'No activity';
-          customers.push({ name: data.name || data.email || 'Customer', wallet: data.walletAddress || doc.id, points: totalPoints, lastActivity: lastTx });
+          customers.push({
+            name: data.name || data.email || 'Customer',
+            wallet: data.walletAddress || doc.id,
+            points: totalPoints,
+            lastActivity: lastTx
+          });
         }
+      });
+      if (customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">No customers yet..</td></tr>';
+      } else {
+        tbody.innerHTML = customers.map(c =>
+          `<tr>
+            <td style="color:var(--text-primary);">${escapeHtml(c.name)}</td>
+            <td class="font-mono text-xs break-all" style="color:var(--text-secondary);">${escapeHtml(c.wallet)}</td>
+            <td style="color:var(--text-primary); font-weight:600;">${c.points}</td>
+            <td style="color:var(--text-secondary);">${c.lastActivity}</td>
+          </tr>`
+        ).join('');
       }
-      if (customers.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">No customers yet..</td></tr>';
-      else {
-        tbody.innerHTML = customers.map(c => `<tr><td style="color:var(--text-primary);">${escapeHtml(c.name)}</td><td class="font-mono text-xs break-all" style="color:var(--text-secondary);">${c.wallet}</td><td style="color:var(--text-primary); font-weight:600;">${c.points}</td><td style="color:var(--text-secondary);">${c.lastActivity}</td></tr>`).join('');
-      }
-    } catch(e) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">No customers yet..</td></tr>';
-    }
+    }, (err) => {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4" style="color:var(--text-secondary);">Could not load customers.</td></tr>';
+    });
   }
 
   // Store Edit Logic

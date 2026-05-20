@@ -318,14 +318,31 @@
       </div>
 
       <!-- Camera not started -->
-      <div id="scanCTA" class="text-center py-4">
-        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center" style="background: linear-gradient(135deg,#d1fae5,#a7f3d0);">
-          <i class="fas fa-camera text-2xl text-green-600"></i>
+      <div id="scanCTA" class="py-4">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <!-- Camera button -->
+          <button onclick="startCamera()" class="flex-1 flex flex-col items-center gap-2 py-5 px-4 rounded-xl font-semibold transition border-2 border-dashed hover:border-green-500 hover:bg-green-50" style="border-color:var(--border-color); background-color:var(--bg-secondary); color:var(--text-primary);">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);">
+              <i class="fas fa-camera text-xl text-green-600"></i>
+            </div>
+            <span class="text-sm font-semibold" style="color:var(--text-primary);">Open Camera</span>
+            <span class="text-xs" style="color:var(--text-secondary);">Scan in real-time</span>
+          </button>
+          <!-- Upload button -->
+          <button onclick="document.getElementById('qrUploadInput').click()" class="flex-1 flex flex-col items-center gap-2 py-5 px-4 rounded-xl font-semibold transition border-2 border-dashed hover:border-blue-500 hover:bg-blue-50" style="border-color:var(--border-color); background-color:var(--bg-secondary); color:var(--text-primary);">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);">
+              <i class="fas fa-image text-xl text-blue-600"></i>
+            </div>
+            <span class="text-sm font-semibold" style="color:var(--text-primary);">Upload QR Image</span>
+            <span class="text-xs" style="color:var(--text-secondary);">From your gallery</span>
+          </button>
         </div>
-        <button onclick="startCamera()" class="bg-green-600 text-white px-7 py-3 rounded-xl font-semibold hover:bg-green-700 transition">
-          <i class="fas fa-camera mr-2"></i> Open Camera & Scan
-        </button>
-        <p class="text-xs mt-2" style="color:var(--text-secondary);">Camera permission will be requested</p>
+        <input type="file" id="qrUploadInput" accept="image/*" class="hidden" onchange="handleQRUpload(event)">
+        <!-- Upload processing indicator -->
+        <div id="uploadProcessing" class="hidden text-center mt-4">
+          <i class="fas fa-spinner fa-spin text-blue-600 text-xl mb-1 block"></i>
+          <p class="text-sm" style="color:var(--text-secondary);">Reading QR code...</p>
+        </div>
       </div>
 
       <!-- Scan Result -->
@@ -619,59 +636,151 @@
   //  QR CAMERA SCANNER
   // ══════════════════════════════════════════════════════════════════════
   var cameraStream = null;
-  var scanInterval = null;
+  var scanAnimFrame = null;
+  var scanActive = false;
 
   async function startCamera() {
     document.getElementById('scanCTA').classList.add('hidden');
     document.getElementById('scannerWrapper').classList.remove('hidden');
     document.getElementById('scanResult').classList.add('hidden');
+    scanActive = true;
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      var video = document.getElementById('cameraFeed');
-      video.srcObject = cameraStream;
-      video.play();
-      video.addEventListener('loadedmetadata', function() {
-        scanInterval = setInterval(function() { scanFrame(video); }, 350);
+      // Use exact 640x480 — lower res = faster jsQR decode
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width:  { exact: 640 },
+          height: { exact: 480 }
+        }
       });
-    } catch(e) {
-      showToast('Camera access denied or unavailable. Please allow camera permission and try again.', 'error');
-      stopCamera();
+    } catch(e1) {
+      try {
+        // Fallback: just ask for rear camera without size constraint
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+      } catch(e2) {
+        showToast('Camera access denied. Please allow camera permission and try again.', 'error');
+        stopCamera();
+        return;
+      }
     }
+    var video = document.getElementById('cameraFeed');
+    video.srcObject = cameraStream;
+    video.setAttribute('playsinline', true);
+    await video.play();
+    scanLoop();
+  }
+
+  function scanLoop() {
+    if (!scanActive) return;
+    var video = document.getElementById('cameraFeed');
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
+      var canvas = document.getElementById('cameraCanvas');
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      // Try at multiple resolutions — start small (fast), escalate if no result
+      var sizes = [300, 500, video.videoWidth];
+      for (var s = 0; s < sizes.length; s++) {
+        var w = Math.min(sizes[s], video.videoWidth);
+        var h = Math.round(video.videoHeight * (w / video.videoWidth));
+        canvas.width  = w;
+        canvas.height = h;
+        ctx.drawImage(video, 0, 0, w, h);
+        var imageData = ctx.getImageData(0, 0, w, h);
+        try {
+          var code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+          if (code && code.data && code.data.trim().length > 0) {
+            scanActive = false;
+            stopCamera();
+            handleQRData(code.data.trim());
+            return;
+          }
+        } catch(e) {}
+      }
+    }
+    scanAnimFrame = requestAnimationFrame(scanLoop);
   }
 
   function stopCamera() {
-    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    scanActive = false;
+    if (scanAnimFrame) { cancelAnimationFrame(scanAnimFrame); scanAnimFrame = null; }
     if (cameraStream) { cameraStream.getTracks().forEach(function(t) { t.stop(); }); cameraStream = null; }
-    document.getElementById('cameraFeed').srcObject = null;
+    var video = document.getElementById('cameraFeed');
+    video.srcObject = null;
     document.getElementById('scannerWrapper').classList.add('hidden');
     document.getElementById('scanCTA').classList.remove('hidden');
   }
 
-  function scanFrame(video) {
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-    var canvas = document.getElementById('cameraCanvas');
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    try {
-      var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts:'dontInvert' });
-      if (code && code.data) {
-        stopCamera();
-        handleQRData(code.data);
-      }
-    } catch(e) {}
+  function handleQRUpload(event) {
+    var file = event.target.files[0];
+    // Reset input so same file can be re-selected if needed
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error');
+      return;
+    }
+    document.getElementById('uploadProcessing').classList.remove('hidden');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.getElementById('cameraCanvas');
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        // Try multiple sizes for best decode chance
+        var sizes = [300, 500, img.width];
+        var found = false;
+        for (var s = 0; s < sizes.length; s++) {
+          var w = Math.min(sizes[s], img.width);
+          var h = Math.round(img.height * (w / img.width));
+          canvas.width  = w;
+          canvas.height = h;
+          ctx.drawImage(img, 0, 0, w, h);
+          var imageData = ctx.getImageData(0, 0, w, h);
+          try {
+            var code = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+            if (code && code.data && code.data.trim().length > 0) {
+              document.getElementById('uploadProcessing').classList.add('hidden');
+              handleQRData(code.data.trim());
+              found = true;
+              break;
+            }
+          } catch(err) {}
+        }
+        if (!found) {
+          document.getElementById('uploadProcessing').classList.add('hidden');
+          showToast('No QR code found in the image. Try a clearer photo.', 'error');
+        }
+      };
+      img.onerror = function() {
+        document.getElementById('uploadProcessing').classList.add('hidden');
+        showToast('Could not load the image. Please try another file.', 'error');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
-  function handleQRData(data) {
-    // Try to parse Scan2Earn QR format: s2e://shop?id=xxx&name=xxx&points=xx
-    // or JSON: {"shopId":"...","shopName":"...","points":10}
-    // or plain shopId string
+  async function handleQRData(data) {
+    // Shopkeeper QR format: {"storeId":"<uid>","storeName":"...","action":"earn_points","timestamp":...}
     try {
       if (data.startsWith('{')) {
         var obj = JSON.parse(data);
-        processScan(obj.shopName || 'Store', obj.shopId || 'unknown', parseInt(obj.points) || 10);
+        var shopName = obj.storeName || obj.shopName || 'Store';
+        var shopId   = obj.storeId   || obj.shopId   || 'unknown';
+        // Look up pointsPerPurchase from Firestore for this shop
+        var points = 10; // default
+        try {
+          var shopDoc = await db.collection('users').doc(shopId).get();
+          if (shopDoc.exists) {
+            var shopData = shopDoc.data();
+            var shopRole = (shopData.roles && shopData.roles.shopkeeper) ? shopData.roles.shopkeeper : shopData;
+            points = parseInt(shopRole.pointsPerPurchase) || 10;
+          }
+        } catch(e) {}
+        processScan(shopName, shopId, points);
         return;
       }
     } catch(e) {}
@@ -683,14 +792,8 @@
       processScan(shopName, shopId, points);
       return;
     }
-    // Fallback: treat as shopId
-    if (data.includes('coffee_001') || data.toLowerCase().includes('green bean')) {
-      processScan('Green Bean Coffee', 'shop_coffee_001', 10);
-    } else if (data.length > 3) {
-      processScan('Scanned Store', data, 10);
-    } else {
-      showToast('Invalid QR code. Try a Scan2Earn store QR.', 'error');
-    }
+    // Unknown QR — not a Scan2Earn code
+    showToast('This does not appear to be a Scan2Earn QR code.', 'error');
   }
 
   async function processScan(shopName, shopId, points) {
